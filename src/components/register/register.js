@@ -28,6 +28,7 @@ const Register = () => {
     postalCode: '',
     country: '',
     checkBox: false,
+    financialInstName: '',
     accountName: '',
     bsbNumber: '',
     accountNumber: '',
@@ -248,7 +249,10 @@ const Register = () => {
           <label className="form__label" for="country">Country</label>
           <input className="form__input" name="country" type="text" id="country" value={group.country || ''} onChange={handleChange} placeholder="" />
         </FormGroup>
-
+        <FormGroup>
+          <label className="form__label" for="financialInstName">Financial Institution Name</label>
+          <input className="form__input" name="financialInstName" type="text" id="financialInstName" value={group.financialInstName || ''} onChange={handleChange} placeholder="" />
+        </FormGroup>
         <FormGroup>
           <label className="form__label" for="accountName">Name as per Bank</label>
           <input className="form__input" name="accountName" type="text" id="accountName" value={group.accountName || ''} onChange={handleChange} placeholder="" />
