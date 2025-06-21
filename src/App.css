@@ -1,0 +1,117 @@
+/* added by ragu */
+
+/* src/components/Navbar.css */
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+ 
+  padding: 1rem 2rem;
+  border-bottom: 2px solid #bbd7e1;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.logo {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #1e3a8a;
+  margin-right: 2rem;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #1f2937;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: #ffffff;
+}
+
+.login-button {
+  background-color: #4b5563;
+  color: #fff;
+  font-weight: 500;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #374151;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .navbar-left {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .navbar-right {
+    margin-top: 1rem;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+
+
+/*.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  float: Center
+}
+
+.navbar li {
+  float: center;
+}
+
+.navbar li a {
+  display: block;
+  float: Center;
+  padding: 8px;
+  background-color: #dddddd;
+}
+
+.active {
+  color: #ffffff;
+}
+*/
+
+.footer {
+  background-color: #baf2fb;
+  border-top: 2px solid rgb(61, 59, 59);
+  position: static;
+  width: 100%;
+  bottom: 100%;
+  color: white;
+  font-size: 21px;
+  
+}

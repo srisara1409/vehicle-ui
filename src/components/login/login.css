@@ -1,0 +1,123 @@
+/* Overall Page Styling */
+.login-body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #e3e3e3; /* light grey background */
+  padding: 2rem;
+}
+
+/* Center White Card */
+.login-container {
+  background-color: #ffffff;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.login-container h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 500;
+  color: #333;
+  margin-top: 2rem;
+}
+
+/* Form Styling */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  gap: 1.5rem;
+}
+
+.login-form label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.25rem; /* Reduced space below label */
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 1rem; /* Controls space below input field */
+  border: none;
+  border-bottom: 1px solid #ccc;
+  font-size: 1rem;
+  outline: none;
+  background-color: transparent;
+}
+
+.login-form input::placeholder {
+  color: #aaa;
+}
+
+/* Forgot password */
+.login-form .forgot-password {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+.login-form .forgot-password a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.login-form .forgot-password a:hover {
+  text-decoration: underline;
+}
+
+/* Buttons Section */
+.login-actions {
+  display: flex;
+  width: 100%;
+  height: 60px;
+}
+
+.login-actions button {
+  flex: 1;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+}
+
+.login-actions .btn-register {
+  background-color: #673ab7; /* purple */
+}
+
+.login-actions .btn-signin {
+  background-color: #ff5722; /* orange */
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-container {
+    margin: 1rem;
+  }
+
+  .login-form {
+    padding: 1.5rem;
+  }
+
+  .login-actions {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .login-actions button {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
