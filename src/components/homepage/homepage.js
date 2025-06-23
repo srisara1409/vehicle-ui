@@ -10,6 +10,7 @@ export default function Homepage() {
     bondAmount: '',
     bondWeeks: '',
     bondStartDate: '',
+    bondEndDate: '',
     make: '',
     model: '',
     registrationNumber: '',
@@ -35,17 +36,17 @@ export default function Homepage() {
   //console.log("===================>",selectedVehicle.id);
 
   const handleModalSubmit = async () => {
-    const { bondAmount, bondWeeks, bondStartDate, make, year, model, registrationNumber, fuelType, note } = formInputs;
+    const { bondAmount, bondWeeks, bondStartDate, bondEndDate, make, year, model, registrationNumber, fuelType, note } = formInputs;
 
     await fetch(`http://localhost:8080/vehicle/approve/${selectedVehicle.id}`, {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bondAmount, bondWeeks, bondStartDate, make, year, model, registrationNumber, fuelType, note }),
+      body: JSON.stringify({ bondAmount, bondWeeks, bondStartDate, bondEndDate, make, year, model, registrationNumber, fuelType, note }),
     });
 
     alert("Approved and PDF sent to user.");
     setShowModal(false);
-    setFormInputs({ bondAmount: '', bondWeeks: '', bondStartDate: '', make: '', year: '', model: '', registrationNumber: '', fuelType: '', note: '' });
+    setFormInputs({ bondAmount: '', bondWeeks: '', bondStartDate: '', bondEndDate: '', make: '', year: '', model: '', registrationNumber: '', fuelType: '', note: '' });
     refreshList();
   };
 

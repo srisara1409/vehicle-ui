@@ -32,8 +32,8 @@ const Register = () => {
     accountName: '',
     bsbNumber: '',
     accountNumber: '',
-    emergencyName: '',
-    emergencyNumber: ''
+    emergencyContactName: '',
+    emergencyContactNumber: ''
   };
   // const sigCanvas = useRef(null);
   const [group, setGroup] = useState(initialFormState);
@@ -76,8 +76,8 @@ const Register = () => {
     if (!group.accountName) newErrors.accountName = 'Required';
     if (!bsbPattern.test(group.bsbNumber)) newErrors.bsbNumber = 'BSB must be 6 digits';
     if (!accountPattern.test(group.accountNumber)) newErrors.accountNumber = '6–10 digit account number';
-    if (!group.emergencyName) newErrors.emergencyName = 'Required';
-    if (!group.emergencyNumber) newErrors.emergencyNumber = 'Required';
+    if (!group.emergencyContactName) newErrors.emergencyContactName = 'Required';
+    if (!group.emergencyContactNumber) newErrors.emergencyContactNumber = 'Required';
     if (!group.checkBox) newErrors.checkBox = 'You must agree to Terms';
 
     setErrors(newErrors);
@@ -271,15 +271,15 @@ const Register = () => {
         </FormGroup>
 
         <FormGroup>
-          <label className="form__label" for="emergencyName">Emergency Contact Name *</label>
-          <input className="form__input" name="emergencyName" type="text" id="emergencyName" value={group.emergencyName || ''} onChange={handleChange} placeholder="" />
-          {errors.emergencyName && <p className="text-danger">{errors.emergencyName}</p>}
+          <label className="form__label" for="emergencyContactName">Emergency Contact Name *</label>
+          <input className="form__input" name="emergencyContactName" type="text" id="emergencyContactName" value={group.emergencyContactName || ''} onChange={handleChange} placeholder="" />
+          {errors.emergencyContactName && <p className="text-danger">{errors.emergencyContactName}</p>}
         </FormGroup>
 
         <FormGroup>
-          <label className="form__label" for="emergencyNumber">Emergency Contact No. *</label>
-          <input className="form__input" name="emergencyNumber" type="text" id="emergencyNumber" value={group.emergencyNumber || ''} onChange={handleChange} placeholder="" />
-          {errors.emergencyNumber && <p className="text-danger">{errors.emergencyNumber}</p>}
+          <label className="form__label" for="emergencyContactNumber">Emergency Contact No. *</label>
+          <input className="form__input" name="emergencyContactNumber" type="text" id="emergencyContactNumber" value={group.emergencyContactNumber || ''} onChange={handleChange} placeholder="" />
+          {errors.emergencyContactNumber && <p className="text-danger">{errors.emergencyContactNumber}</p>}
         </FormGroup>
 
         {/* <FormGroup>
