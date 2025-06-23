@@ -1,7 +1,7 @@
 import { React, useState } from "react";
 import "bootstrap/dist/css/bootstrap.css";
-//import { useRef } from 'react';
-//import SignatureCanvas from 'react-signature-canvas';
+import { useRef } from 'react';
+import SignatureCanvas from 'react-signature-canvas';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -22,6 +22,7 @@ const Register = () => {
     licensePhoto: null,
     passportCopy: null,
     photoIdCopy: null,
+    signature: null,
     addressLine: '',
     city: '',
     state: '',
@@ -34,7 +35,7 @@ const Register = () => {
     emergencyName: '',
     emergencyNumber: ''
   };
-  // const sigCanvas = useRef(null);
+  const sigCanvas = useRef(null);
   const [group, setGroup] = useState(initialFormState);
   const [option, setOption] = useState("");
   const [errors, setErrors] = useState({});
@@ -95,9 +96,24 @@ const Register = () => {
     if (!validate()) return;
 
     try {
-      const formData = new FormData();
-      const fullData = { ...group, vehicleType: option };
+
+       const signature = sigCanvas.current 
+       ?.getCanvas()
+      ?.toDataURL('image/png');
+   
+      
+
+    
+      const fullData = { ...group, vehicleType: option, signature };
+        const formData = new FormData();
       formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
+
+     
+
+    // formData.append(
+    //   'formData',
+    //   new Blob([JSON.stringify(fullData)], { type: "application/json" })
+    // );
 
       if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
       if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
@@ -110,6 +126,7 @@ const Register = () => {
       alert('Vehicle registered. Awaiting admin approval.');
       setGroup(initialFormState);
       setOption("");
+      sigCanvas.current.clear(); 
       navigate('/homepage');
     } catch (error) {
       console.error("Registration failed:", error);
@@ -278,11 +295,35 @@ const Register = () => {
           {errors.emergencyNumber && <p className="text-danger">{errors.emergencyNumber}</p>}
         </FormGroup>
 
-        {/* <FormGroup>
-        <label className="form__label" >Signature</label>
-        <SignatureCanvas className="form__input" backgroundColor='#f0f0f0' ref={sigCanvas} penColor="black" canvasProps={{ width: 300, height: 100 }} />
-        <button className="btn" type="button" onClick={clear}>Clear Signature</button> 
-        </FormGroup> */}
+        <FormGroup>
+  <label className="form__label">Signature</label>
+  <div
+    style={{
+      border: "1px solid #ccc",
+      padding: "10px",
+      borderRadius: "5px",
+      background: "#f9f9f9",
+      width: "100%",
+      maxWidth: "400px",
+    }}
+  >
+    <SignatureCanvas
+      ref={sigCanvas}
+      backgroundColor="#fff"
+      penColor="black"
+      canvasProps={{ width: 400, height: 100, className: "sigCanvas" }}
+    />
+    <div style={{ marginTop: "5px", textAlign: "right" }}>
+      <button
+        type="button"
+        className="btn btn-sm btn-outline-secondary"
+        onClick={() => sigCanvas.current.clear()}
+      >
+        Clear
+      </button>
+    </div>
+  </div>
+</FormGroup>
 
         <FormGroup check>
           <input type="checkbox" id="test1" name="checkBox" onChange={handleChange} checked={group.checkBox} />

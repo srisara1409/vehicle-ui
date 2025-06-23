@@ -38,7 +38,7 @@ export default function Homepage() {
     const { bondAmount, bondWeeks, bondStartDate, make, year, model, registrationNumber, fuelType, note } = formInputs;
 
     await fetch(`http://localhost:8080/vehicle/approve/${selectedVehicle.id}`, {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ bondAmount, bondWeeks, bondStartDate, make, year, model, registrationNumber, fuelType, note }),
     });
@@ -122,7 +122,13 @@ export default function Homepage() {
                             Bank Statement
                           </a>
                         </td>
-
+                        <td>
+                          <img
+                            src={`http://localhost:8080/register/file/${v.id}/signature`}
+                            alt="Signature"
+                            style={{ width: '100px', height: 'auto' }}
+                          />
+                        </td>
                         <td>
                           {v.status === 'PENDING' && (
                             <button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
