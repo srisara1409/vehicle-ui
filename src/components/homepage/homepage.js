@@ -123,7 +123,13 @@ export default function Homepage() {
                             Bank Statement
                           </a>
                         </td>
-
+                        <td>
+                          <img
+                            src={`http://localhost:8080/register/file/${v.id}/signature`}
+                            alt="Signature"
+                            style={{ width: '100px', height: 'auto' }}
+                          />
+                        </td>
                         <td>
                           {v.status === 'PENDING' && (
                             <button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
