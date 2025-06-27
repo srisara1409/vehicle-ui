@@ -1,0 +1,19 @@
+.about-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .about-container h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #01b6ff;
+  }
+  
+  .about-container p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #333;
+  }
+  

@@ -76,19 +76,6 @@ export default function Homepage() {
       .then((data) => setVehicles(data));
   };
 
-  const handleClosureApproval = async (vehicle) => {
-    try {
-      await fetch(`http://localhost:8080/vehicle/close/${vehicle.id}`, {
-        method: 'POST'
-      });
-      alert("Vehicle closed successfully.");
-      refreshList();
-    } catch (err) {
-      console.error("Error closing vehicle:", err);
-      alert("Failed to close vehicle.");
-    }
-  };
-
   // 🔍 Filter logic: includes first name, last name, or license number
   const filteredVehicles = vehicles.filter(v => {
     const term = searchText.toLowerCase();
@@ -103,17 +90,7 @@ export default function Homepage() {
   const grouped = {
     Pending: filteredVehicles.filter(v => v.status === 'PENDING'),
     Approved: filteredVehicles.filter(v => v.status === 'APPROVED'),
-    Closed: filteredVehicles.filter(v => {
-      if (v.status === 'CLOSED') return true;
-
-      if (v.status === 'APPROVED' && v.bondEndDate) {
-        const end = new Date(v.bondEndDate);
-        const today = new Date();
-        return !isNaN(end) && end.toDateString() === today.toDateString();
-      }
-
-      return false;
-    })
+    Closed: filteredVehicles.filter(v => v.status === 'CLOSED'),
   };
 
   return (
@@ -197,28 +174,7 @@ export default function Homepage() {
                                 <button className="action-btn btn-transfer" onClick={(handleTransfer)}>Transfer</button>
                               </>
                             );
-
-                            const end = new Date(v.bondEndDate);
-                            const today = new Date();
-                            if (isNaN(end)) return (
-                              <>
-                                <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
-                                <button className="action-btn btn-transfer" onClick={(handleTransfer)}>Transfer</button>
-                              </>
-                            );
-
-                            if (end.toDateString() === today.toDateString()) {
-                              return (
-                                <button className="action-btn btn-approve" onClick={() => handleClosureApproval(v)}>Closure Approval</button>
-                              );
-                            }
-
-                            return (
-                              <>
-                                <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
-                                <button className="action-btn btn-transfer" onClick={(handleTransfer)}>Transfer</button>
-                              </>
-                            );
+                      
                           })()}
 
                           {(v.status === 'CLOSED') && <span>Closed</span>}
