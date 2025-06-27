@@ -4,11 +4,11 @@ import './navbarPage.css';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const isLoggedIn = localStorage.getItem("isAuthenticated") === "true";
+  const isLoggedIn = sessionStorage.getItem("isAuthenticated") === "true";
 
   // ✅ Add this function inside the component
   const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated");
+    sessionStorage.removeItem("isAuthenticated");
     navigate('/login');
   };
 
