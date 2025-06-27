@@ -14,26 +14,45 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    await fetch('http://localhost:8082/todolist/api/v1/user/login', {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(formData)
-    });
+    try {
+      const response = await fetch('http://localhost:8080/api/v1/admin/login', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const message = await response.text();
+
+      if (response.ok && message === "LOGIN_SUCCESS") {
+        localStorage.setItem("isAuthenticated", "true");
+        navigate('/homepage');
+      } else if (message === "NOT_ADMIN") {
+        alert("You are not authorized to access this page.");
+      } else if (message === "INVALID_PASSWORD") {
+        alert("Incorrect password.");
+      } else if (message === "USER_NOT_FOUND") {
+        alert("User does not exist.");
+      } else {
+        alert("Login failed.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("Server error. Please try again.");
+    }
 
     setFormData({ userName: '', password: '' });
-    navigate('/homepage');
   };
+
 
   return (
     <div className="login-body">
       <div className="login-container">
         <h2>LOGIN</h2>
         <form className="login-form" onSubmit={handleSubmit}>
-          <label htmlFor="userName">EMAIL</label>
+          <label htmlFor="userName">EMAIL/USER NAME</label>
           <input
             type="text"
             id="userName"
