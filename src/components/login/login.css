@@ -101,7 +101,22 @@
   background-color: #ff5722; /* orange */
 }
 
-/* Responsive */
+/* Web view adjustments */
+@media (min-width: 481px) {
+  .login-actions {
+    justify-content: center;
+    gap: 1rem; /* adds space between buttons */
+  }
+
+  .login-actions button {
+    max-width: 180px; /* reduce button width */
+    width: 100%;
+    margin-bottom: 20px;
+    border-radius: 6px;
+  }
+}
+
+/* Mobile view adjustments */
 @media (max-width: 480px) {
   .login-container {
     margin: 1rem;
@@ -113,11 +128,16 @@
 
   .login-actions {
     flex-direction: column;
+    align-items: center;
     height: auto;
   }
 
   .login-actions button {
-    width: 100%;
-    margin-bottom: 0.5rem;
+    width: 80%;              /* smaller width */
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;       /* slightly smaller text */
+    padding: 10px 0;         /* consistent padding */
+    border-radius: 6px;      /* rounded for cleaner look */
   }
 }
+
