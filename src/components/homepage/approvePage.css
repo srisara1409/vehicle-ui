@@ -61,28 +61,38 @@
 
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
 }
 
-.btn {
-  padding: 8px 18px;
-  border-radius: 6px;
-  font-size: 0.95rem;
+.btnn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
   border: none;
-  font-weight: 500;
+  color: white;
+  transition: background-color 0.2s ease-in-out;
 }
 
+/* Confirm - match Approve style */
 .confirm-btn {
   background-color: #10b981;
-  color: white;
 }
 
+.confirm-btn:hover {
+  background-color: #0f766e;
+}
+
+/* Cancel - red */
 .cancel-btn {
   background-color: #ef4444;
-  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #dc2626;
 }
 
 @media (max-width: 768px) {

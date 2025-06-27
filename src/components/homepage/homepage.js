@@ -1,16 +1,21 @@
 import { React, useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import "./homepage.css";
+import "./approvePage.css"
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format } from 'date-fns';
 
 export default function Homepage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const navigate = useNavigate();
+  const [searchText, setSearchText] = useState('');
   const [formInputs, setFormInputs] = useState({
     bondAmount: '',
     bondWeeks: '',
-    bondStartDate: '',
-    bondEndDate: '',
+    bondStartDate: null,
+    bondEndDate: null,
     make: '',
     model: '',
     registrationNumber: '',
@@ -19,7 +24,6 @@ export default function Homepage() {
     note: ''
   });
   const [vehicles, setVehicles] = useState([]);
-
 
   useEffect(() => {
     fetch('http://localhost:8080/vehicle/getUser')
@@ -36,7 +40,14 @@ export default function Homepage() {
   //console.log("===================>",selectedVehicle.id);
 
   const handleModalSubmit = async () => {
-    const { bondAmount, bondWeeks, bondStartDate, bondEndDate, make, year, model, registrationNumber, fuelType, note } = formInputs;
+    const { bondAmount, bondWeeks, make, year, model, registrationNumber, fuelType, note } = formInputs;
+
+    const bondStartDate = formInputs.bondStartDate
+      ? format(formInputs.bondStartDate, 'dd-MM-yyyy')
+      : '';
+    const bondEndDate = formInputs.bondEndDate
+      ? format(formInputs.bondEndDate, 'dd-MM-yyyy')
+      : '';
 
     await fetch(`http://localhost:8080/vehicle/approve/${selectedVehicle.id}`, {
       method: 'POST',
@@ -55,9 +66,8 @@ export default function Homepage() {
     navigate(`/update/${vehicle.id}`, { state: vehicle });
   };
 
-  const handleTransfer = (vehicle) => {
-    alert(`Transfer clicked for ${vehicle.name} (ID: ${vehicle.id})`);
-    // Add logic to transfer ownership or assign user
+  const handleTransfer = () => {
+    window.open('https://account.service.nsw.gov.au/', '_blank');
   };
 
   const refreshList = () => {
@@ -66,17 +76,62 @@ export default function Homepage() {
       .then((data) => setVehicles(data));
   };
 
+  const handleClosureApproval = async (vehicle) => {
+    try {
+      await fetch(`http://localhost:8080/vehicle/close/${vehicle.id}`, {
+        method: 'POST'
+      });
+      alert("Vehicle closed successfully.");
+      refreshList();
+    } catch (err) {
+      console.error("Error closing vehicle:", err);
+      alert("Failed to close vehicle.");
+    }
+  };
+
+  // 🔍 Filter logic: includes first name, last name, or license number
+  const filteredVehicles = vehicles.filter(v => {
+    const term = searchText.toLowerCase();
+    return (
+      v.firstName.toLowerCase().includes(term) ||
+      v.lastName.toLowerCase().includes(term) ||
+      v.licenseNumber.toLowerCase().includes(term)
+    );
+  });
+
   // Group by status
   const grouped = {
-    Pending: vehicles.filter(v => v.status === 'PENDING'),
-    Approved: vehicles.filter(v => v.status === 'APPROVED'),
-    Closed: vehicles.filter(v => v.status === 'CLOSED'),
+    Pending: filteredVehicles.filter(v => v.status === 'PENDING'),
+    Approved: filteredVehicles.filter(v => v.status === 'APPROVED'),
+    Closed: filteredVehicles.filter(v => {
+      if (v.status === 'CLOSED') return true;
+
+      if (v.status === 'APPROVED' && v.bondEndDate) {
+        const end = new Date(v.bondEndDate);
+        const today = new Date();
+        return !isNaN(end) && end.toDateString() === today.toDateString();
+      }
+
+      return false;
+    })
   };
 
   return (
     <div className="homepage-body">
       <div className="page-wrapper">
         <h1>User Vehicle Requests</h1>
+
+        {/* Search & Filter Row */}
+        <div className="search-filter-row">
+          <input
+            type="text"
+            placeholder="Search by"
+            className="search-input"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <button className="filter-btn" onClick={() => setSearchText('')}>Clear</button>
+        </div>
 
         {['Pending', 'Approved', 'Closed'].map((status) => (
           <section key={status} style={{ marginTop: '30px' }}>
@@ -93,11 +148,12 @@ export default function Homepage() {
                       <th>Last Name</th>
                       <th>DOB</th>
                       <th>Mobile</th>
-                      <th>License #</th>
+                      <th>License No</th>
                       <th>Email</th>
                       <th>License Copy</th>
                       <th>Passport</th>
                       <th>Bank Statement</th>
+                      <th>Signature</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -134,13 +190,39 @@ export default function Homepage() {
                           {v.status === 'PENDING' && (
                             <button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
                           )}
-                          {v.status === 'APPROVED' && (
-                            <>
-                              <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
-                              <button className="action-btn btn-transfer" onClick={() => handleTransfer(v)}>Transfer</button>
-                            </>
-                          )}
-                          {v.status === 'CLOSED' && <span>Closed</span>}
+                          {v.status === 'APPROVED' && (() => {
+                            if (!v.bondEndDate) return (
+                              <>
+                                <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
+                                <button className="action-btn btn-transfer" onClick={(handleTransfer)}>Transfer</button>
+                              </>
+                            );
+
+                            const end = new Date(v.bondEndDate);
+                            const today = new Date();
+                            if (isNaN(end)) return (
+                              <>
+                                <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
+                                <button className="action-btn btn-transfer" onClick={(handleTransfer)}>Transfer</button>
+                              </>
+                            );
+
+                            if (end.toDateString() === today.toDateString()) {
+                              return (
+                                <button className="action-btn btn-approve" onClick={() => handleClosureApproval(v)}>Closure Approval</button>
+                              );
+                            }
+
+                            return (
+                              <>
+                                <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
+                                <button className="action-btn btn-transfer" onClick={(handleTransfer)}>Transfer</button>
+                              </>
+                            );
+                          })()}
+
+                          {(v.status === 'CLOSED') && <span>Closed</span>}
+
                         </td>
                       </tr>
                     ))}
@@ -188,7 +270,7 @@ function ApproveModal({ formInputs, setFormInputs, onSubmit, onCancel }) {
 
         <div className="row">
           <div className="input-group">
-            <label>Rental Bond Amount</label>
+            <label>Bond Amount</label>
             <input type="text" value={formInputs.bondAmount} onChange={e => setFormInputs({ ...formInputs, bondAmount: e.target.value })} />
           </div>
           <div className="input-group">
@@ -200,18 +282,30 @@ function ApproveModal({ formInputs, setFormInputs, onSubmit, onCancel }) {
         <div className="row">
           <div className="input-group">
             <label>Start Date</label>
-            <input type="text" value={formInputs.bondStartDate} onChange={e => setFormInputs({ ...formInputs, bondStartDate: e.target.value })} />
+            <DatePicker
+              selected={formInputs.bondStartDate}
+              onChange={(date) => setFormInputs({ ...formInputs, bondStartDate: date })}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select start date"
+              className="datepicker-input"
+            />
           </div>
           <div className="input-group">
             <label>End Date</label>
-            <input type="text" value={formInputs.bondEndDate || ''} onChange={e => setFormInputs({ ...formInputs, bondEndDate: e.target.value })} />
+            <DatePicker
+              selected={formInputs.bondEndDate}
+              onChange={(date) => setFormInputs({ ...formInputs, bondEndDate: date })}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select end date"
+              className="datepicker-input"
+            />
           </div>
         </div>
 
         <div className="row">
           <div className="input-group">
             <label>Registration Number</label>
-            <input type="text" value={formInputs.registrationNumber} onChange={e => setFormInputs({ ...formInputs, registrationNumber: e.target.value })} />
+            <input type="text" value={formInputs.registrationNumber || ''} onChange={e => setFormInputs({ ...formInputs, registrationNumber: e.target.value })} />
           </div>
           <div className="input-group">
             <label>Rent Duration</label>
@@ -249,8 +343,8 @@ function ApproveModal({ formInputs, setFormInputs, onSubmit, onCancel }) {
         </div>
 
         <div className="modal-actions">
-          <button className="btn confirm-btn" onClick={onSubmit}>Confirm</button>
-          <button className="btn cancel-btn" onClick={onCancel}>Cancel</button>
+          <button className="btnn confirm-btn" onClick={onSubmit}>Confirm</button>
+          <button className="btnn cancel-btn" onClick={onCancel}>Cancel</button>
         </div>
       </div>
     </div>
@@ -269,9 +363,4 @@ const thStyle = {
   padding: '8px',
   backgroundColor: '#f2f2f2',
   textAlign: 'left',
-};
-
-const tdStyle = {
-  border: '1px solid #ddd',
-  padding: '8px',
 };

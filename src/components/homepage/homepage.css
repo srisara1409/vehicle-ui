@@ -2,17 +2,18 @@
 body {
   margin: 0;
   font-family: 'Inter', 'Segoe UI', sans-serif;
-  background-color: #ffffff;
+  background-color: #eceae6;
 }
 
 .homepage-body {
   padding: 20px;
-  background-color: #ffffff;
+  background-color: #eceae6;
   min-height: 100vh;
 }
 
 h1, h2 {
   color: #111827;
+  font-size: 1rem;
 }
 
 /* Force page layout to center */
@@ -35,7 +36,7 @@ h1, h2 {
 .vehicle-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.65rem;
   min-width: 1000px;
 }
 
@@ -55,7 +56,7 @@ h1, h2 {
   padding: 5px 10px;
   border: none;
   border-radius: 5px;
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   cursor: pointer;
 }
 
@@ -138,19 +139,39 @@ h1, h2 {
   padding: 8px;
 }
 
-/* Footer fixed layout */
-.footer {
-  margin: 40px auto;
-  padding: 15px 20px;
-  
-  text-align: center;
-  background-color: #ccf5ff;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #004e61;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+
+.search-filter-row {
+  display: flex;
+  justify-content: flex-end;   /* Align to right */
+  align-items: center;
+  margin-top: 15px;
+  gap: 10px;
 }
+
+.search-input {
+  padding: 8px 12px;
+  font-size: 0.65rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  width: 250px;
+}
+
+.filter-btn {
+  padding: 8px 12px;
+  background-color: #d1d5db;
+  color: #111827;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.65rem;
+  cursor: pointer;
+}
+
+.filter-btn:hover {
+  background-color: #9ca3af;
+}
+
 
 /* Responsive table behavior */
 @media (max-width: 768px) {
@@ -169,7 +190,7 @@ h1, h2 {
   }
 
   .footer {
-    max-width: 95%;
+    max-width: 100%;
     font-size: 0.85rem;
   }
 }

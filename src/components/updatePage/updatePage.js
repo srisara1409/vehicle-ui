@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import 'react-datepicker/dist/react-datepicker.css';
 import './updatePage.css';
 
 export default function UpdatePage() {
@@ -70,9 +71,9 @@ export default function UpdatePage() {
         <div className="row">
           {renderInput('firstName', 'First Name', userInfo.firstName, handleUserChange)}
           {renderInput('lastName', 'Last Name', userInfo.lastName, handleUserChange)}
+          {renderInput('dateOfBirth', 'Date of Birth', userInfo.dateOfBirth, handleUserChange)}
         </div>
         <div className="row">
-          {renderInput('dateOfBirth', 'Date of Birth', userInfo.dateOfBirth, handleUserChange)}
           {renderInput('email', 'Email', userInfo.email, handleUserChange)}
           {renderInput('mobileNumber', 'Mobile Number', userInfo.mobileNumber, handleUserChange)}
         </div>
@@ -80,10 +81,7 @@ export default function UpdatePage() {
           {renderInput('emergencyContactName', 'Emergency Name', userInfo.emergencyContactName, handleUserChange)}
           {renderInput('emergencyContactNumber', 'Emergency Contact', userInfo.emergencyContactNumber, handleUserChange)}
         </div>
-      </fieldset>
-
-      {/* Address Section */}
-      <fieldset className="section-box">
+         {/* Address Section */}
         <legend>Address</legend>
         <div className="row">
           {renderInput('addressLine', 'Address Line 1', userInfo.addressLine, handleUserChange)}
