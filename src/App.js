@@ -9,6 +9,7 @@ import Register from './components/register/register'
 import React from "react";
 import About from './components/about/about';
 import Contact from './components/contact/contact';
+import PrivateRoute from './components/PrivateRoute/PrivateRoute';
 
 import Footer from "./footer";
 function App() {
@@ -19,11 +20,12 @@ function App() {
 
             <div className="content">
                 <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/homepage" element={<Home />} />
-                    <Route path="/update/:id" element={<UpdatePage />} />
+                    <Route path="/" element={<Login />} />
+                     <Route path="/register" element={<Register />} />
+                    <Route path="/homepage" element={<PrivateRoute><Home /></PrivateRoute>} />
+                    <Route path="/update/:id" element={<PrivateRoute><UpdatePage /></PrivateRoute>} />
                     <Route path="/login" element={< Login />} />
-                    <Route path="/register" element={<Register />} />
+                   
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                 </Routes>
