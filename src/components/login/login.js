@@ -27,7 +27,10 @@ const Login = () => {
       const message = await response.text();
 
       if (response.ok && message === "LOGIN_SUCCESS") {
-        localStorage.setItem("isAuthenticated", "true");
+       // localStorage.setItem("isAuthenticated", "true");
+         sessionStorage.setItem("isAuthenticated", "true");
+      //  sessionStorage.setItem("userName", formData.userName); // Optional: store username
+
         navigate('/homepage');
       } else if (message === "NOT_ADMIN") {
         alert("You are not authorized to access this page.");
