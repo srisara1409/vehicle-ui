@@ -10,7 +10,8 @@ export default function UpdatePage() {
   const [userInfo, setUserInfo] = useState({
     firstName: '', lastName: '', dateOfBirth: '', email: '', mobileNumber: '',
     emergencyContactName: '', emergencyContactNumber: '',
-    addressLine: '', addressLine2: '', city: '', state: '', postalCode: '', country: ''
+    addressLine: '', addressLine2: '', city: '', state: '', postalCode: '', country: '', financialInstName: '',
+    accountName: '', bsbNumber: '', accountNumber: '', vehicleType: '', licenseNumber: '', licenseState: ''
   });
 
   const [vehicles, setVehicles] = useState([]);
@@ -28,6 +29,16 @@ export default function UpdatePage() {
     const { name, value } = e.target;
     setUserInfo(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleUserSubmit = async () => {
+    await fetch(`http://localhost:8080/register/update/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userInfo)
+    });
+    alert("User details updated successfully.");
+  };
+
 
   const handleVehicleChange = (index, event) => {
     const { name, value } = event.target;
@@ -63,6 +74,7 @@ export default function UpdatePage() {
 
   return (
     <div className="update-container">
+      <div className="close-button" onClick={() => navigate('/homepage')}>×</div>
       <h2 className="form-title">Update Vehicle</h2>
 
       {/* User Info Section */}
@@ -81,7 +93,7 @@ export default function UpdatePage() {
           {renderInput('emergencyContactName', 'Emergency Name', userInfo.emergencyContactName, handleUserChange)}
           {renderInput('emergencyContactNumber', 'Emergency Contact', userInfo.emergencyContactNumber, handleUserChange)}
         </div>
-         {/* Address Section */}
+        {/* Address Section */}
         <legend>Address</legend>
         <div className="row">
           {renderInput('addressLine', 'Address Line 1', userInfo.addressLine, handleUserChange)}
@@ -92,6 +104,59 @@ export default function UpdatePage() {
           {renderInput('state', 'State', userInfo.state, handleUserChange)}
           {renderInput('postalCode', 'Post Code', userInfo.postalCode, handleUserChange)}
           {renderInput('country', 'Country', userInfo.country, handleUserChange)}
+        </div>
+
+        {/* Financial Section */}
+        <legend>Bank Details</legend>
+        <div className="row">
+          {renderInput('financialInstName', 'Financial Institution Name', userInfo.financialInstName, handleUserChange)}
+          {renderInput('accountName', 'Name as per Bank', userInfo.accountName, handleUserChange)}
+        </div>
+        <div className="row">
+          {renderInput('bsbNumber', 'BSB No', userInfo.bsbNumber, handleUserChange)}
+          {renderInput('accountNumber', 'Account Number', userInfo.accountNumber, handleUserChange)}
+        </div>
+        {/* License Section */}
+        <legend>License Info</legend>
+        <div className="row">
+          {renderInput('vehicleType', 'Vehicle Type', userInfo.vehicleType, handleUserChange)}
+          {renderInput('licenseNumber', 'License Number', userInfo.licenseNumber, handleUserChange)}
+          {renderInput('licenseState', 'License State/Country', userInfo.licenseState, handleUserChange)}
+        </div>
+
+        <div className="row">
+          <div className="input-group file-preview">
+            <label>Uploaded License</label>
+            {userInfo.id && (
+              <a
+                href={`http://localhost:8080/register/file/${userInfo.id}/license`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="file-link-box"
+              >
+                View License
+              </a>
+            )}
+          </div>
+
+          <div className="input-group file-preview">
+            <label>Uploaded Passport</label>
+            {userInfo.id && (
+              <a
+                href={`http://localhost:8080/register/file/${userInfo.id}/passport`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="file-link-box"
+              >
+                View Passport
+              </a>
+            )}
+          </div>
+        </div>
+
+
+        <div className="section-actions">
+          <button className="submit-button" onClick={handleUserSubmit}>Update User Details</button>
         </div>
       </fieldset>
 

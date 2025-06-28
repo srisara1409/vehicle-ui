@@ -23,7 +23,6 @@ const Register = () => {
     photoIdCopy: null,
     signature: null,
     addressLine1: '',
-    addressLine2: '',
     city: '',
     state: '',
     postalCode: '',
@@ -40,6 +39,8 @@ const Register = () => {
   const [group, setGroup] = useState(initialFormState);
   const [option, setOption] = useState("");
   const [errors, setErrors] = useState({});
+  const [signatureError, setSignatureError] = useState('');
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -88,7 +89,6 @@ const Register = () => {
     }
     if (option === 'ebike' && !group.photoIdCopy) newErrors.photoIdCopy = 'Enter valid PhotoID Copy';
     if (!group.addressLine1) newErrors.addressLine1 = 'Enter Address Line1';
-    if (!group.addressLine2) newErrors.addressLine2 = 'Enter Address Line2';
     if (!group.city) newErrors.city = 'Enter valid City';
     if (!group.postalCode) newErrors.postalCode = 'Enter valid Postal Code';
     if (!group.state) newErrors.state = 'Enter valid State';
@@ -100,6 +100,9 @@ const Register = () => {
     if (!group.emergencyContactName) newErrors.emergencyContactName = 'Enter Emergency Contact Name';
     if (!group.emergencyContactNumber) newErrors.emergencyContactNumber = 'Enter Emergency Contact Number';
     if (!group.checkBox) newErrors.checkBox = 'You must agree to Terms';
+
+    const isSignatureEmpty = sigCanvas.current.isEmpty();
+    setSignatureError(isSignatureEmpty ? 'Signature is required' : '');
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -350,10 +353,11 @@ const Register = () => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="addressLine2">Address Line 2<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="addressLine2">Address Line 2</label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.addressLine2 ? 'input-error' : ''}`} type="text" name="addressLine2" id="addressLine2" value={group.addressLine2} onChange={handleChange} placeholder="Enter your street address 2" />
-            {errors.addressLine2 && <div className="tooltip-message">{errors.addressLine2}</div>}
+            <input className="form__input" type="text" name="addressLine2" id="addressLine2"
+              value={group.addressLine2 || ''} onChange={handleChange} placeholder="Enter your street address 2"
+            />
           </div>
         </FormGroup>
 
@@ -450,6 +454,7 @@ const Register = () => {
               <button type="button" className="clear-btn-styled" onClick={() => sigCanvas.current.clear()}>
                 Clear
               </button>
+              {signatureError && <div className="tooltip-message" style={{ display: 'block', marginTop: '5px' }}>{signatureError}</div>}
             </div>
           </div>
         </FormGroup>

@@ -13,6 +13,7 @@
 }
 
 .modal-box {
+  position: relative; /* Add this line */
   background-color: #fff;
   padding: 24px;
   width: 650px;
@@ -93,6 +94,22 @@
 
 .cancel-btn:hover {
   background-color: #dc2626;
+}
+/* Approve Page close button */
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  z-index: 1000;
+  transition: color 0.2s ease-in-out;
+}
+
+.close-button:hover {
+  color: #ef4444;
 }
 
 @media (max-width: 768px) {

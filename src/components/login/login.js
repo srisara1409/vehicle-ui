@@ -84,7 +84,6 @@ const Login = () => {
         </form>
 
         <div className="login-actions">
-          <button type="button" className="btn-register" onClick={() => navigate('/register')}>REGISTER</button>
           <button type="submit" className="btn-signin" onClick={handleSubmit}>SIGN IN</button>
         </div>
       </div>

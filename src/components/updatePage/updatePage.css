@@ -1,6 +1,7 @@
 /* UpdatePage.css */
 
 .update-container {
+  position: relative;
   max-width: 1000px;
   margin: 40px auto;
   padding: 30px;
@@ -88,6 +89,55 @@
 
 .submit-button:hover {
   background-color: #1e40af;
+}
+
+.section-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.file-preview {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.file-link-box {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 8px 14px;
+  background-color: #f0f4ff;
+  border: 1px solid #1d4ed8;
+  border-radius: 6px;
+  font-weight: 500;
+  color: #1d4ed8;
+  text-decoration: none;
+  width: fit-content;
+  transition: background-color 0.2s ease;
+}
+
+.file-link-box:hover {
+  background-color: #e0eaff;
+  text-decoration: underline;
+}
+
+
+/* Update Page close button */
+.close-button {
+  position: absolute;
+  top: 24px;
+  right: 40px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s ease-in-out;
+}
+
+.close-button:hover {
+  color: #ef4444;
 }
 
 /* Responsive tweaks */
