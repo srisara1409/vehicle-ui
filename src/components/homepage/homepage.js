@@ -82,7 +82,8 @@ export default function Homepage() {
     return (
       v.firstName.toLowerCase().includes(term) ||
       v.lastName.toLowerCase().includes(term) ||
-      v.licenseNumber.toLowerCase().includes(term)
+      v.licenseNumber.toLowerCase().includes(term) ||
+      v.email.toLowerCase().includes(term)
     );
   });
 
@@ -223,8 +224,8 @@ function ApproveModal({ formInputs, setFormInputs, onSubmit, onCancel }) {
     <div className="modal-overlay">
       <div className="modal-box">
         <h3 className="modal-title">Approve Request</h3>
-
-        <div className="row">
+        <div className="close-button" onClick={onCancel}>×</div> {/* Add this */}
+        <div className="row" >
           <div className="input-group">
             <label>Bond Amount</label>
             <input type="text" value={formInputs.bondAmount} onChange={e => setFormInputs({ ...formInputs, bondAmount: e.target.value })} />
