@@ -7,10 +7,6 @@ const Login = () => {
   const [formData, setFormData] = useState({ userName: '', password: '' });
   const navigate = useNavigate();
 
- // const BASE_URL = process.env.REACT_APP_BASE_URL;
-
-  console.log("=============================>>>", config.BASE_URL);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
