@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import './login.css';
+import config from '../../config';
 
 const Login = () => {
   const [formData, setFormData] = useState({ userName: '', password: '' });
   const navigate = useNavigate();
+
+ // const BASE_URL = process.env.REACT_APP_BASE_URL;
+
+  console.log("=============================>>>", config.BASE_URL);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,7 +20,7 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/admin/login', {
+      const response = await fetch(`${config.BASE_URL}/admin/login`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',

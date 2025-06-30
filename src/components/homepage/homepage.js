@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
 import "./homepage.css";
 import "./approvePage.css";
+import config from '../../config';
 
 export default function Homepage() {
   const [showModal, setShowModal] = useState(false);
@@ -30,7 +31,7 @@ export default function Homepage() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:8080/vehicle/getUser")
+    fetch(`${config.BASE_URL}/vehicle/getUser`)
       .then((res) => res.json())
       .then((data) => setVehicles(data))
       .catch((err) => console.error("Error fetching data:", err));
@@ -107,7 +108,7 @@ export default function Homepage() {
       const formattedStart = format(bondStartDate, "dd-MM-yyyy hh:mm aa");
       const formattedEnd = format(bondEndDate, "dd-MM-yyyy hh:mm aa");
 
-      await fetch(`http://localhost:8080/vehicle/approve/${selectedVehicle.id}`, {
+      await fetch(`${config.BASE_URL}/vehicle/approve/${selectedVehicle.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -132,7 +133,7 @@ export default function Homepage() {
       if (bankFile) fileForm.append("bankFile", bankFile);
 
       if (licenseFile || passportFile || bankFile) {
-        await fetch("http://localhost:8080/register/updateFiles", {
+        await fetch(`${config.BASE_URL}/register/updateFiles`, {
           method: "POST",
           body: fileForm
         });
@@ -172,7 +173,7 @@ export default function Homepage() {
   };
 
   const refreshList = () => {
-    fetch("http://localhost:8080/vehicle/getUser")
+    fetch(`${config.BASE_URL}/vehicle/getUser`)
       .then((res) => res.json())
       .then((data) => setVehicles(data));
   };
@@ -250,17 +251,17 @@ export default function Homepage() {
                         <td>{v.registrationNumber || (v.vehicles?.[0]?.registrationNumber || "N/A")}</td>
                         <td>{v.licenseNumber}</td>
                         <td>
-                          <a href={`http://localhost:8080/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
+                          <a href={`${config.BASE_URL}/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
                         </td>
                         <td>
-                          <a href={`http://localhost:8080/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
+                          <a href={`${config.BASE_URL}/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
                         </td>
                         <td>
-                          <a href={`http://localhost:8080/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer">Bank Statement</a>
+                          <a href={`${config.BASE_URL}/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer">Bank Statement</a>
                         </td>
                         <td>
                           <img
-                            src={`http://localhost:8080/register/file/${v.id}/signature`}
+                            src={`${config.BASE_URL}/register/file/${v.id}/signature`}
                             alt="Signature"
                             style={{ width: "100px", height: "auto" }}
                           />
@@ -464,7 +465,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
           <div className="input-group">
             <label>License Copy</label>
             <a
-              href={`http://localhost:8080/register/file/${formInputs.userId}/license`}
+              href={`${config.BASE_URL}/register/file/${formInputs.userId}/license`}
               target="_blank"
               rel="noopener noreferrer"
               className="file-link-box"
@@ -483,7 +484,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
           <div className="input-group">
             <label>Passport</label>
             <a
-              href={`http://localhost:8080/register/file/${formInputs.userId}/passport`}
+              href={`${config.BASE_URL}/register/file/${formInputs.userId}/passport`}
               target="_blank"
               rel="noopener noreferrer"
               className="file-link-box"
@@ -504,7 +505,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
           <div className="input-group">
             <label>Bank Statement</label>
             <a
-              href={`http://localhost:8080/register/file/${formInputs.userId}/bankpdf`}
+              href={`${config.BASE_URL}/register/file/${formInputs.userId}/bankpdf`}
               target="_blank"
               rel="noopener noreferrer"
               className="file-link-box"
@@ -522,7 +523,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
           <div className="input-group">
             <label>Signature</label>
             <img
-              src={`http://localhost:8080/register/file/${formInputs.userId}/signature`}
+              src={`${config.BASE_URL}/register/file/${formInputs.userId}/signature`}
               alt="Signature"
               style={{ width: "120px", height: "auto", border: "1px solid #ccc", borderRadius: "4px" }}
             />

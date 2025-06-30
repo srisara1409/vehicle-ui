@@ -9,6 +9,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import './registerPage.css';
 import countryList from 'react-select-country-list';
 import { Button, FormGroup, Form } from "reactstrap";
+import config from '../../config';
 
 const Register = () => {
   const initialFormState = {
@@ -156,16 +157,11 @@ const Register = () => {
       const formData = new FormData();
       formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
 
-      // formData.append(
-      //   'formData',
-      //   new Blob([JSON.stringify(fullData)], { type: "application/json" })
-      // );
-
       if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
       if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
       if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
 
-      await axios.post('http://localhost:8080/register', formData, {
+      await axios.post(`${config.BASE_URL}/register`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -179,8 +175,6 @@ const Register = () => {
       alert("Something went wrong. Please try again.");
     }
   };
-
-  //const clear = () => sigCanvas.current.clear();
 
   return (
     <div>

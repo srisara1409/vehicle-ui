@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import 'react-datepicker/dist/react-datepicker.css';
 import './updatePage.css';
+import config from '../../config';
 
 export default function UpdatePage() {
   const { id } = useParams();
@@ -17,7 +18,7 @@ export default function UpdatePage() {
   const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    fetch(`http://localhost:8080/vehicle/getUser/${id}`)
+    fetch(`${config.BASE_URL}/vehicle/getUser/${id}`)
       .then(res => res.json())
       .then(data => {
         setUserInfo(data);
@@ -31,7 +32,7 @@ export default function UpdatePage() {
   };
 
   const handleUserSubmit = async () => {
-    await fetch(`http://localhost:8080/register/update/${id}`, {
+    await fetch(`${config.BASE_URL}/register/update/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userInfo)
@@ -50,7 +51,7 @@ export default function UpdatePage() {
   };
 
   const handleVehicleSubmit = async (vehicleId, updatedVehicle) => {
-    await fetch(`http://localhost:8080/vehicle/update/${id}`, {
+    await fetch(`${config.BASE_URL}/vehicle/update/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedVehicle)
@@ -130,7 +131,7 @@ export default function UpdatePage() {
             <label>Uploaded License</label>
             {userInfo.id && (
               <a
-                href={`http://localhost:8080/register/file/${userInfo.id}/license`}
+                href={`${config.BASE_URL}/register/file/${userInfo.id}/license`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="file-link-box"
@@ -144,7 +145,7 @@ export default function UpdatePage() {
             <label>Uploaded Passport</label>
             {userInfo.id && (
               <a
-                href={`http://localhost:8080/register/file/${userInfo.id}/passport`}
+                href={`${config.BASE_URL}/register/file/${userInfo.id}/passport`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="file-link-box"
