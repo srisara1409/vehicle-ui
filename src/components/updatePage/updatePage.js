@@ -11,7 +11,7 @@ export default function UpdatePage() {
     firstName: '', lastName: '', dateOfBirth: '', email: '', mobileNumber: '',
     emergencyContactName: '', emergencyContactNumber: '',
     addressLine: '', addressLine2: '', city: '', state: '', postalCode: '', country: '', financialInstName: '',
-    accountName: '', bsbNumber: '', accountNumber: '', vehicleType: '', licenseNumber: '', licenseState: ''
+    accountName: '', bsbNumber: '', accountNumber: '', vehicleType: '', licenseNumber: '', licenseState: '', licenseCountry: ''
   });
 
   const [vehicles, setVehicles] = useState([]);
@@ -121,7 +121,8 @@ export default function UpdatePage() {
         <div className="row">
           {renderInput('vehicleType', 'Vehicle Type', userInfo.vehicleType, handleUserChange)}
           {renderInput('licenseNumber', 'License Number', userInfo.licenseNumber, handleUserChange)}
-          {renderInput('licenseState', 'License State/Country', userInfo.licenseState, handleUserChange)}
+          {renderInput('licenseState', 'License State', userInfo.licenseState, handleUserChange)}
+          {renderInput('licenseCountry', 'License Country', userInfo.licenseCountry, handleUserChange)}
         </div>
 
         <div className="row">

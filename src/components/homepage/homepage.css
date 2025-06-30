@@ -1,4 +1,6 @@
-/* homepage.css */
+/* =======================
+   Global Styles
+======================= */
 body {
   margin: 0;
   font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -16,7 +18,9 @@ h1, h2 {
   font-size: 1rem;
 }
 
-/* Force page layout to center */
+/* =======================
+   Layout & Wrapper
+======================= */
 .page-wrapper {
   max-width: 1200px;
   margin: 0 auto;
@@ -24,7 +28,9 @@ h1, h2 {
   background-color: #ffffff;
 }
 
-/* Ensure table scrolls only inside wrapper */
+/* =======================
+   Table Styles
+======================= */
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -52,12 +58,24 @@ h1, h2 {
   font-weight: 600;
 }
 
+.vehicle-table td {
+  background-color: #ffffff;
+}
+
+/* =======================
+   Button Styles
+======================= */
 .action-btn {
   padding: 5px 10px;
   border: none;
   border-radius: 5px;
   font-size: 0.65rem;
   cursor: pointer;
+}
+
+.btn-approve {
+  background-color: #10b981;
+  color: white;
 }
 
 .btn-update {
@@ -71,11 +89,6 @@ h1, h2 {
   color: white;
 }
 
-.btn-approve {
-  background-color: #10b981;
-  color: white;
-}
-
 .action-btn-group {
   display: flex;
   flex-direction: row;
@@ -83,11 +96,14 @@ h1, h2 {
   flex-wrap: wrap;
 }
 
+/* =======================
+   Modal Styles
+======================= */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -101,7 +117,7 @@ h1, h2 {
   border-radius: 10px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .modal-box label {
@@ -110,7 +126,8 @@ h1, h2 {
   margin-top: 10px;
 }
 
-.modal-box input, .modal-box textarea {
+.modal-box input,
+.modal-box textarea {
   width: 100%;
   padding: 8px;
   margin-top: 5px;
@@ -125,25 +142,12 @@ h1, h2 {
   gap: 10px;
 }
 
-/* homepage.css */
-.vehicle-table th {
-  
-  padding: 8px;
-  background-color: #f2f2f2;
-  text-align: left;
-}
-
-.vehicle-table td {
-  
-  background-color: #ffffff;
-  padding: 8px;
-}
-
-
-
+/* =======================
+   Search & Filter
+======================= */
 .search-filter-row {
   display: flex;
-  justify-content: flex-end;   /* Align to right */
+  justify-content: flex-end;
   align-items: center;
   margin-top: 15px;
   gap: 10px;
@@ -172,8 +176,24 @@ h1, h2 {
   background-color: #9ca3af;
 }
 
+/* =======================
+   Date Picker Input
+======================= */
+.datepicker-input {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  width: 150px;
+}
 
-/* Responsive table behavior */
+.datetime-wrapper label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* =======================
+   Responsive Design
+======================= */
 @media (max-width: 768px) {
   .page-wrapper {
     padding: 10px;
@@ -186,7 +206,7 @@ h1, h2 {
 
   .vehicle-table {
     font-size: 0.75rem;
-    min-width: 1000px; /* so it scrolls */
+    min-width: 1000px; /* allow horizontal scroll */
   }
 
   .footer {

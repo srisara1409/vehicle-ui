@@ -1,97 +1,198 @@
-import { React, useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import { format } from "date-fns";
+
+import "react-datepicker/dist/react-datepicker.css";
 import "./homepage.css";
-import "./approvePage.css"
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { format } from 'date-fns';
+import "./approvePage.css";
 
 export default function Homepage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [vehicles, setVehicles] = useState([]);
+  const [errors, setErrors] = useState({});
+
   const navigate = useNavigate();
-  const [searchText, setSearchText] = useState('');
+
   const [formInputs, setFormInputs] = useState({
-    bondAmount: '',
-    bondWeeks: '',
+    bondAmount: "",
+    bondWeeks: "",
     bondStartDate: null,
     bondEndDate: null,
-    make: '',
-    model: '',
-    registrationNumber: '',
-    year: '',
-    fuelType: '',
-    note: ''
+    make: "",
+    model: "",
+    registrationNumber: "",
+    year: "",
+    fuelType: "",
+    note: ""
   });
-  const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:8080/vehicle/getUser')
+    fetch("http://localhost:8080/vehicle/getUser")
       .then((res) => res.json())
       .then((data) => setVehicles(data))
-      .catch((err) => console.error('Error fetching data:', err));
+      .catch((err) => console.error("Error fetching data:", err));
   }, []);
 
   const handleApprove = (vehicle) => {
     setSelectedVehicle(vehicle);
+    setFormInputs({
+      ...formInputs,
+      userId: vehicle.id,
+      registrationNumber: vehicle.registrationNumber || vehicle.vehicles?.[0]?.registrationNumber || "",
+      make: vehicle.make || "",
+      model: vehicle.model || "",
+      year: vehicle.year || "",
+      fuelType: vehicle.fuelType || "",
+      note: vehicle.note || ""
+    });
     setShowModal(true);
   };
 
-  //console.log("===================>",selectedVehicle.id);
-
   const handleModalSubmit = async () => {
-    const { bondAmount, bondWeeks, make, year, model, registrationNumber, fuelType, note } = formInputs;
+    const {
+      bondAmount,
+      bondWeeks,
+      make,
+      year,
+      model,
+      registrationNumber,
+      fuelType,
+      note,
+      bondStartDate,
+      bondEndDate,
+      licenseFile,
+      passportFile,
+      bankFile
+    } = formInputs;
 
-    const bondStartDate = formInputs.bondStartDate
-      ? format(formInputs.bondStartDate, 'dd-MM-yyyy')
-      : '';
-    const bondEndDate = formInputs.bondEndDate
-      ? format(formInputs.bondEndDate, 'dd-MM-yyyy')
-      : '';
+    const newErrors = {};
 
-    await fetch(`http://localhost:8080/vehicle/approve/${selectedVehicle.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bondAmount, bondWeeks, bondStartDate, bondEndDate, make, year, model, registrationNumber, fuelType, note }),
-    });
+    if (!registrationNumber?.trim()) {
+      newErrors.registrationNumber = "Registration Number is required.";
+    }
 
-    alert("Approved and PDF sent to user.");
-    setShowModal(false);
-    setFormInputs({ bondAmount: '', bondWeeks: '', bondStartDate: '', bondEndDate: '', make: '', year: '', model: '', registrationNumber: '', fuelType: '', note: '' });
-    refreshList();
+    const start = bondStartDate ? new Date(bondStartDate) : null;
+    const end = bondEndDate ? new Date(bondEndDate) : null;
+
+    if (!start || !end) {
+      alert("Please provide both bond start and end dates.");
+      return;
+    }
+
+    if (end <= start) {
+      alert("End date must be after start date.");
+      return;
+    }
+
+    if (!bondStartDate || !bondEndDate) {
+      alert("Please provide both bond start and end dates.");
+      return;
+    }
+
+    if (bondEndDate <= bondStartDate) {
+      alert("End date must be after start date.");
+      return;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    try {
+
+      const formattedStart = format(bondStartDate, "dd-MM-yyyy hh:mm aa");
+      const formattedEnd = format(bondEndDate, "dd-MM-yyyy hh:mm aa");
+
+      await fetch(`http://localhost:8080/vehicle/approve/${selectedVehicle.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bondAmount,
+          bondWeeks,
+          bondStartDate: formattedStart,
+          bondEndDate: formattedEnd,
+          make,
+          year,
+          model,
+          registrationNumber,
+          fuelType,
+          note
+        })
+      });
+
+      const fileForm = new FormData();
+      fileForm.append("userId", selectedVehicle.id);
+
+      if (licenseFile) fileForm.append("licenseFile", licenseFile);
+      if (passportFile) fileForm.append("passportFile", passportFile);
+      if (bankFile) fileForm.append("bankFile", bankFile);
+
+      if (licenseFile || passportFile || bankFile) {
+        await fetch("http://localhost:8080/register/updateFiles", {
+          method: "POST",
+          body: fileForm
+        });
+      }
+
+      alert("Approved and PDF sent to user.");
+      setShowModal(false);
+      setFormInputs({
+        bondAmount: "",
+        bondWeeks: "",
+        bondStartDate: "",
+        bondEndDate: "",
+        make: "",
+        model: "",
+        registrationNumber: "",
+        year: "",
+        fuelType: "",
+        note: "",
+        licenseFile: null,
+        passportFile: null,
+        bankFile: null
+      });
+      refreshList();
+    }
+    catch (error) {
+      console.error("Error approving or uploading files:", error);
+      alert("Something went wrong. Please try again.");
+    }
   };
 
   const handleUpdate = (vehicle) => {
-    // window.open(`/update/${vehicle.id}`, '/updatePage');
     navigate(`/update/${vehicle.id}`, { state: vehicle });
   };
 
   const handleTransfer = () => {
-    window.open('https://account.service.nsw.gov.au/', '_blank');
+    window.open("https://www.apps09.revenue.nsw.gov.au/customer_service/finesonline/login", "_blank");
   };
 
   const refreshList = () => {
-    fetch('http://localhost:8080/vehicle/getUser')
+    fetch("http://localhost:8080/vehicle/getUser")
       .then((res) => res.json())
       .then((data) => setVehicles(data));
   };
 
-  // 🔍 Filter logic: includes first name, last name, or license number
-  const filteredVehicles = vehicles.filter(v => {
+  const filteredVehicles = vehicles.filter((v) => {
     const term = searchText.toLowerCase();
     return (
       v.firstName.toLowerCase().includes(term) ||
       v.lastName.toLowerCase().includes(term) ||
       v.licenseNumber.toLowerCase().includes(term) ||
-      v.email.toLowerCase().includes(term)
+      v.email.toLowerCase().includes(term) ||
+      v.mobileNumber.toLowerCase().includes(term) ||
+      v.registrationNumber.toLowerCase().includes(term)
     );
   });
 
-  // Group by status
   const grouped = {
-    Pending: filteredVehicles.filter(v => v.status === 'PENDING'),
-    Approved: filteredVehicles.filter(v => v.status === 'APPROVED'),
-    Closed: filteredVehicles.filter(v => v.status === 'CLOSED'),
+    Pending: filteredVehicles.filter((v) => v.status === "PENDING"),
+    Approved: filteredVehicles.filter((v) => v.status === "APPROVED"),
+    Closed: filteredVehicles.filter((v) => v.status === "CLOSED")
   };
 
   return (
@@ -99,7 +200,6 @@ export default function Homepage() {
       <div className="page-wrapper">
         <h1>User Vehicle Requests</h1>
 
-        {/* Search & Filter Row */}
         <div className="search-filter-row">
           <input
             type="text"
@@ -108,12 +208,14 @@ export default function Homepage() {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <button className="filter-btn" onClick={() => setSearchText('')}>Clear</button>
+          <button className="filter-btn" onClick={() => setSearchText("")}>
+            Clear
+          </button>
         </div>
 
-        {['Pending', 'Approved', 'Closed'].map((status) => (
-          <section key={status} style={{ marginTop: '30px' }}>
-            <h2 >{status} Requests</h2>
+        {["Pending", "Approved", "Closed"].map((status) => (
+          <section key={status} style={{ marginTop: "30px" }}>
+            <h2>{status} Requests</h2>
             {grouped[status].length === 0 ? (
               <p>No {status.toLowerCase()} requests.</p>
             ) : (
@@ -126,8 +228,9 @@ export default function Homepage() {
                       <th>Last Name</th>
                       <th>DOB</th>
                       <th>Mobile</th>
-                      <th>License No</th>
                       <th>Email</th>
+                      <th>Vehicle Reg No</th>
+                      <th>License No</th>
                       <th>License Copy</th>
                       <th>Passport</th>
                       <th>Bank Statement</th>
@@ -137,49 +240,42 @@ export default function Homepage() {
                   </thead>
                   <tbody>
                     {grouped[status].map((v) => (
-                      <tr key={v.id} >
+                      <tr key={v.id}>
                         <td>{v.id}</td>
                         <td>{v.firstName}</td>
                         <td>{v.lastName}</td>
                         <td>{v.dateOfBirth}</td>
                         <td>{v.mobileNumber}</td>
-                        <td>{v.licenseNumber}</td>
                         <td>{v.email}</td>
-                        <td><a href={`http://localhost:8080/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer" title="View uploaded license" >
-                          License
-                        </a></td>
+                        <td>{v.registrationNumber || (v.vehicles?.[0]?.registrationNumber || "N/A")}</td>
+                        <td>{v.licenseNumber}</td>
                         <td>
-                          <a href={`http://localhost:8080/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer" title="View uploaded passport">
-                            Passport
-                          </a></td>
+                          <a href={`http://localhost:8080/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
+                        </td>
                         <td>
-                          <a href={`http://localhost:8080/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer" title="View uploaded bank details">
-                            Bank Statement
-                          </a>
+                          <a href={`http://localhost:8080/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
+                        </td>
+                        <td>
+                          <a href={`http://localhost:8080/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer">Bank Statement</a>
                         </td>
                         <td>
                           <img
                             src={`http://localhost:8080/register/file/${v.id}/signature`}
                             alt="Signature"
-                            style={{ width: '100px', height: 'auto' }}
+                            style={{ width: "100px", height: "auto" }}
                           />
                         </td>
                         <td>
-                          {v.status === 'PENDING' && (
+                          {v.status === "PENDING" && (
                             <button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
                           )}
-                          {v.status === 'APPROVED' && (() => {
-                            if (!v.bondEndDate) return (
-                              <>
-                                <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
-                                <button className="action-btn btn-transfer" onClick={(handleTransfer)}>Transfer</button>
-                              </>
-                            );
-                      
-                          })()}
-
-                          {(v.status === 'CLOSED') && <span>Closed</span>}
-
+                          {v.status === "APPROVED" && !v.bondEndDate && (
+                            <>
+                              <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
+                              <button className="action-btn btn-transfer" onClick={handleTransfer}>Transfer</button>
+                            </>
+                          )}
+                          {v.status === "CLOSED" && <span>Closed</span>}
                         </td>
                       </tr>
                     ))}
@@ -194,45 +290,70 @@ export default function Homepage() {
           <ApproveModal
             formInputs={formInputs}
             setFormInputs={setFormInputs}
+            errors={errors}
+            setErrors={setErrors}
             onSubmit={handleModalSubmit}
             onCancel={() => {
               setShowModal(false);
               setFormInputs({
-                bondAmount: '',
-                bondWeeks: '',
-                bondStartDate: '',
-                bondEndDate: '',
-                registrationNumber: '',
-                rentDuration: '',
-                make: '',
-                model: '',
-                year: '',
-                fuelType: '',
-                note: ''
+                bondAmount: "",
+                bondWeeks: "",
+                bondStartDate: "",
+                bondEndDate: "",
+                registrationNumber: "",
+                rentDuration: "",
+                make: "",
+                model: "",
+                year: "",
+                fuelType: "",
+                note: ""
               });
             }}
           />
         )}
       </div>
     </div>
-
   );
 }
 
-function ApproveModal({ formInputs, setFormInputs, onSubmit, onCancel }) {
+function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, onCancel }) {
+  const [startDate, setStartDate] = useState(null);
+  const [startTime, setStartTime] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+
+  useEffect(() => {
+    if (startDate && startTime) {
+      const combined = new Date(startDate);
+      combined.setHours(startTime.getHours());
+      combined.setMinutes(startTime.getMinutes());
+      setFormInputs((prev) => ({ ...prev, bondStartDate: combined }));
+    }
+  }, [startDate, startTime, setFormInputs]);
+
+  useEffect(() => {
+    if (endDate && endTime) {
+      const combined = new Date(endDate);
+      combined.setHours(endTime.getHours());
+      combined.setMinutes(endTime.getMinutes());
+      setFormInputs((prev) => ({ ...prev, bondEndDate: combined }));
+    }
+  }, [endDate, endTime, setFormInputs]);
+
   return (
     <div className="modal-overlay">
       <div className="modal-box">
         <h3 className="modal-title">Approve Request</h3>
-        <div className="close-button" onClick={onCancel}>×</div> {/* Add this */}
-        <div className="row" >
+        <div className="close-button" onClick={onCancel}>×</div>
+
+        <div className="row">
           <div className="input-group">
             <label>Bond Amount</label>
-            <input type="text" value={formInputs.bondAmount} onChange={e => setFormInputs({ ...formInputs, bondAmount: e.target.value })} />
+            <input type="text" value={formInputs.bondAmount} onChange={(e) => setFormInputs({ ...formInputs, bondAmount: e.target.value })} />
           </div>
           <div className="input-group">
             <label>Rent per Week</label>
-            <input type="text" value={formInputs.bondWeeks} onChange={e => setFormInputs({ ...formInputs, bondWeeks: e.target.value })} />
+            <input type="text" value={formInputs.bondWeeks} onChange={(e) => setFormInputs({ ...formInputs, bondWeeks: e.target.value })} />
           </div>
         </div>
 
@@ -240,20 +361,55 @@ function ApproveModal({ formInputs, setFormInputs, onSubmit, onCancel }) {
           <div className="input-group">
             <label>Start Date</label>
             <DatePicker
-              selected={formInputs.bondStartDate}
-              onChange={(date) => setFormInputs({ ...formInputs, bondStartDate: date })}
+              selected={startDate}
+              onChange={setStartDate}
               dateFormat="dd-MM-yyyy"
-              placeholderText="Select start date"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              placeholderText="Select date"
+              className="datepicker-input"
+            />
+          </div>
+          <div className="input-group">
+            <label>Start Time</label>
+            <DatePicker
+              selected={startTime}
+              onChange={setStartTime}
+              showTimeSelect
+              showTimeSelectOnly
+              timeIntervals={5}
+              timeCaption="Time"
+              dateFormat="h:mm aa"
+              placeholderText="Select time"
               className="datepicker-input"
             />
           </div>
           <div className="input-group">
             <label>End Date</label>
             <DatePicker
-              selected={formInputs.bondEndDate}
-              onChange={(date) => setFormInputs({ ...formInputs, bondEndDate: date })}
+              selected={endDate}
+              onChange={setEndDate}
               dateFormat="dd-MM-yyyy"
-              placeholderText="Select end date"
+              showMonthDropdown
+              showYearDropdown
+              dropdownMode="select"
+              minDate={formInputs.bondStartDate}
+              placeholderText="Select date"
+              className="datepicker-input"
+            />
+          </div>
+          <div className="input-group">
+            <label>End Time</label>
+            <DatePicker
+              selected={endTime}
+              onChange={setEndTime}
+              showTimeSelect
+              showTimeSelectOnly
+              timeIntervals={5}
+              timeCaption="Time"
+              dateFormat="h:mm aa"
+              placeholderText="Select time"
               className="datepicker-input"
             />
           </div>
@@ -262,40 +418,122 @@ function ApproveModal({ formInputs, setFormInputs, onSubmit, onCancel }) {
         <div className="row">
           <div className="input-group">
             <label>Registration Number</label>
-            <input type="text" value={formInputs.registrationNumber || ''} onChange={e => setFormInputs({ ...formInputs, registrationNumber: e.target.value })} />
+            <input
+              type="text"
+              value={formInputs.registrationNumber || ""}
+              onChange={(e) => {
+                setFormInputs({ ...formInputs, registrationNumber: e.target.value });
+                if (setErrors) {
+                  setErrors((prev) => ({ ...prev, registrationNumber: "" }));
+                }
+              }}
+            />
+            {errors?.registrationNumber && (
+              <span style={{ color: "red", fontSize: "0.8rem" }}>{errors.registrationNumber}</span>
+            )}
           </div>
           <div className="input-group">
             <label>Rent Duration</label>
-            <input type="text" value={formInputs.rentDuration || ''} onChange={e => setFormInputs({ ...formInputs, rentDuration: e.target.value })} />
+            <input type="text" value={formInputs.rentDuration || ""} onChange={(e) => setFormInputs({ ...formInputs, rentDuration: e.target.value })} />
           </div>
         </div>
 
         <div className="row">
           <div className="input-group">
             <label>Make</label>
-            <input type="text" value={formInputs.make} onChange={e => setFormInputs({ ...formInputs, make: e.target.value })} />
+            <input type="text" value={formInputs.make} onChange={(e) => setFormInputs({ ...formInputs, make: e.target.value })} />
           </div>
           <div className="input-group">
             <label>Model</label>
-            <input type="text" value={formInputs.model} onChange={e => setFormInputs({ ...formInputs, model: e.target.value })} />
+            <input type="text" value={formInputs.model} onChange={(e) => setFormInputs({ ...formInputs, model: e.target.value })} />
           </div>
         </div>
 
         <div className="row">
           <div className="input-group">
             <label>Year</label>
-            <input type="text" value={formInputs.year} onChange={e => setFormInputs({ ...formInputs, year: e.target.value })} />
+            <input type="text" value={formInputs.year} onChange={(e) => setFormInputs({ ...formInputs, year: e.target.value })} />
           </div>
           <div className="input-group">
             <label>Fuel Type</label>
-            <input type="text" value={formInputs.fuelType} onChange={e => setFormInputs({ ...formInputs, fuelType: e.target.value })} />
+            <input type="text" value={formInputs.fuelType} onChange={(e) => setFormInputs({ ...formInputs, fuelType: e.target.value })} />
           </div>
         </div>
 
         <div className="row">
+          <div className="input-group">
+            <label>License Copy</label>
+            <a
+              href={`http://localhost:8080/register/file/${formInputs.userId}/license`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="file-link-box"
+            >
+              View License
+            </a>
+            <input
+              type="file"
+              name="licenseFile"
+              accept="application/pdf,image/*"
+              onChange={(e) => setFormInputs({ ...formInputs, licenseFile: e.target.files[0] })}
+              style={{ marginTop: "8px" }}
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Passport</label>
+            <a
+              href={`http://localhost:8080/register/file/${formInputs.userId}/passport`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="file-link-box"
+            >
+              View Passport
+            </a>
+            <input
+              type="file"
+              name="passportFile"
+              accept="application/pdf,image/*"
+              onChange={(e) => setFormInputs({ ...formInputs, passportFile: e.target.files[0] })}
+              style={{ marginTop: "8px" }}
+            />
+          </div>
+        </div>
+
+        <div className="row">
+          <div className="input-group">
+            <label>Bank Statement</label>
+            <a
+              href={`http://localhost:8080/register/file/${formInputs.userId}/bankpdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="file-link-box"
+            >
+              View Bank Statement
+            </a>
+            <input
+              type="file"
+              name="bankFile"
+              accept="application/pdf,image/*"
+              onChange={(e) => setFormInputs({ ...formInputs, bankFile: e.target.files[0] })}
+              style={{ marginTop: "8px" }}
+            />
+          </div>
+          <div className="input-group">
+            <label>Signature</label>
+            <img
+              src={`http://localhost:8080/register/file/${formInputs.userId}/signature`}
+              alt="Signature"
+              style={{ width: "120px", height: "auto", border: "1px solid #ccc", borderRadius: "4px" }}
+            />
+          </div>
+        </div>
+
+
+        <div className="row">
           <div className="input-group full-width">
             <label>Comments</label>
-            <textarea rows="3" value={formInputs.note} onChange={e => setFormInputs({ ...formInputs, note: e.target.value })}></textarea>
+            <textarea rows="3" value={formInputs.note} onChange={(e) => setFormInputs({ ...formInputs, note: e.target.value })}></textarea>
           </div>
         </div>
 
@@ -308,16 +546,9 @@ function ApproveModal({ formInputs, setFormInputs, onSubmit, onCancel }) {
   );
 }
 
-
-/* const tableStyle = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  marginTop: '10px',
-}; */
-
 const thStyle = {
-  border: '1px solid #ddd',
-  padding: '8px',
-  backgroundColor: '#f2f2f2',
-  textAlign: 'left',
+  border: "1px solid #ddd",
+  padding: "8px",
+  backgroundColor: "#f2f2f2",
+  textAlign: "left"
 };
