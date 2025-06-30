@@ -15,7 +15,7 @@ const Navbar = () => {
   return (
     <div className="navbar-wrapper">
       <nav className="navbar">
-        <div className="nav-logo">Car Leasing</div>
+        <div className="nav-logo">ZUBER CAR RENTAL PTY LTD</div>
 
         <div className="nav-menu">
           {isLoggedIn && <Link to="/homepage">Home</Link>}

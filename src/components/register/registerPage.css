@@ -49,6 +49,8 @@ body {
     box-sizing: border-box;
     font-size: 0.80rem;  /* Adjust as needed, e.g., 0.75rem for smaller */
     color: #6b7280;  /* Optional: lighter grey tone for better contrast */
+    width: 100%;
+    max-width: 100%;
 }
 
 .form-row {
@@ -58,6 +60,11 @@ body {
     margin-bottom: 15px;
 }
 
+.fixed-width-dropdown {
+    min-width: 250px;
+    width: 100%;
+  }
+  
 .custom-checkbox {
     border: 3px solid #7e8a94;
     float: right;
@@ -215,7 +222,8 @@ input[type="file"].file-upload::-webkit-file-upload-button {
 input[type="file"].file-upload.input-error {
     border-color: #dc3545;
 }
-  
+
+
 
 @media (max-width: 576px) {
     .form {

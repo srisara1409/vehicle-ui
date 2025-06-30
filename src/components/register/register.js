@@ -7,6 +7,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Link, useNavigate } from 'react-router-dom';
 import './registerPage.css';
+import countryList from 'react-select-country-list';
 import { Button, FormGroup, Form } from "reactstrap";
 
 const Register = () => {
@@ -18,6 +19,7 @@ const Register = () => {
     email: '',
     licenseNumber: '',
     licenseState: '',
+    licenseCountry: '',
     licensePhoto: null,
     passportCopy: null,
     photoIdCopy: null,
@@ -40,11 +42,36 @@ const Register = () => {
   const [option, setOption] = useState("");
   const [errors, setErrors] = useState({});
   const [signatureError, setSignatureError] = useState('');
+  const countries = countryList().getData(); // Returns array of { label, value }
 
   const navigate = useNavigate();
+  const australianStates = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT"];
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
+
+    if (name === "licenseState") {
+      if (australianStates.includes(value)) {
+        setGroup((prev) => ({
+          ...prev,
+          licenseState: value,
+          licenseCountry: "Australia"
+        }));
+      } else if (value === "Overseas") {
+        setGroup((prev) => ({
+          ...prev,
+          licenseState: value,
+          licenseCountry: ""
+        }));
+      } else {
+        setGroup((prev) => ({ ...prev, licenseState: value }));
+      }
+    }
+
+    if (name === "licenseCountry") {
+      setGroup((prev) => ({ ...prev, licenseCountry: value }));
+    }
+
 
     if (type === "checkbox") {
       setGroup({ ...group, [name]: checked });
@@ -84,6 +111,7 @@ const Register = () => {
     if (option === 'car' || option === 'motorbike') {
       if (!group.licenseNumber) newErrors.licenseNumber = 'Enter valid License Number';
       if (!group.licenseState) newErrors.licenseState = 'Enter License Obtained State';
+      if (!group.licenseCountry) newErrors.licenseCountry = 'Enter License Obtained Country';
       if (!group.licensePhoto) newErrors.licensePhoto = 'Enter License Photo';
       if (!group.passportCopy) newErrors.passportCopy = 'Enter valid Passport Copy';
     }
@@ -118,8 +146,6 @@ const Register = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!validate()) return;
-
-
     try {
 
       const signature = sigCanvas.current
@@ -182,26 +208,45 @@ const Register = () => {
           <div className="tooltip-container" style={{ flex: 1 }}>
             <DatePicker
               className={`form__input ${errors.dateOfBirth ? 'input-error' : ''}`}
-              selected={group.dateOfBirth ? new Date(group.dateOfBirth) : null}
-              onChange={(date) =>
+              selected={
+                group.dateOfBirth
+                  ? (() => {
+                    const [yyyy, mm, dd] = group.dateOfBirth.split("-");
+                    return new Date(Number(yyyy), Number(mm) - 1, Number(dd), 12); // Set to noon local time
+                  })()
+                  : null
+              }
+
+              onChange={(date) => {
+                if (!date) return handleChange({ target: { name: 'dateOfBirth', value: '' } });
+
+                const yyyy = date.getFullYear();
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const formattedDate = `${yyyy}-${mm}-${dd}`; // Local-safe format
+
                 handleChange({
                   target: {
                     name: 'dateOfBirth',
-                    value: date ? date.toISOString().split('T')[0] : ''
+                    value: formattedDate
                   }
-                })
-              }
+                });
+              }}
+
               onChangeRaw={(e) => {
                 const input = e.target.value;
                 const regex = /^(\d{2})-(\d{2})-(\d{4})$/;
                 if (regex.test(input)) {
                   const [, dd, mm, yyyy] = input.match(regex);
-                  const formatted = new Date(`${yyyy}-${mm}-${dd}`);
+                  const formatted = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+                  formatted.setHours(12, 0, 0, 0);
+
                   if (!isNaN(formatted)) {
+                    const localDate = formatted.toISOString().split('T')[0];
                     handleChange({
                       target: {
                         name: 'dateOfBirth',
-                        value: formatted.toISOString().split('T')[0]
+                        value: localDate
                       }
                     });
                   }
@@ -210,7 +255,9 @@ const Register = () => {
               dateFormat="dd-MM-yyyy"
               placeholderText="Select or type your date of birth (dd-MM-yyyy)"
               maxDate={new Date()}
+              showMonthDropdown
               showYearDropdown
+              dropdownMode="select"
               scrollableYearDropdown
               yearDropdownItemNumber={100}
               id="dateOfBirth"
@@ -271,18 +318,55 @@ const Register = () => {
             </FormGroup>
 
             <FormGroup className="form-row">
-              <label className="form__label" for="licenseState">License Country/State<span style={{ color: 'red' }}>*</span></label>
+              <label className="form__label" for="licenseState">License State<span style={{ color: 'red' }}>*</span></label>
               <div className="tooltip-container" style={{ flex: 1 }}>
-                <input
-                  type="text"
+                <select
                   className={`form__input ${errors.licenseState ? 'input-error' : ''}`}
                   name="licenseState"
                   id="licenseState"
                   value={group.licenseState || ''}
                   onChange={handleChange}
-                  placeholder="e.g., NSW, VIC, WA..."
-                />
+                >
+                  <option value="">-- Select State --</option>
+                  <option value="NSW">New South Wales (NSW)</option>
+                  <option value="VIC">Victoria (VIC)</option>
+                  <option value="QLD">Queensland (QLD)</option>
+                  <option value="WA">Western Australia (WA)</option>
+                  <option value="SA">South Australia (SA)</option>
+                  <option value="TAS">Tasmania (TAS)</option>
+                  <option value="ACT">Australian Capital Territory (ACT)</option>
+                  <option value="Overseas">Overseas</option>
+                </select>
                 {errors.licenseState && <div className="tooltip-message">{errors.licenseState}</div>}
+              </div>
+            </FormGroup>
+
+            <FormGroup className="form-row">
+              <label className="form__label" htmlFor="licenseCountry">License Country<span style={{ color: 'red' }}>*</span></label>
+              <div className="tooltip-container" style={{ flex: 1 }}>
+                <select
+                  className={`form__input fixed-width-dropdown ${errors.licenseCountry ? 'input-error' : ''}`}
+                  name="licenseCountry"
+                  id="licenseCountry"
+                  value={group.licenseCountry}
+                  onChange={handleChange}
+                >
+                  <option value="">-- Select Country --</option>
+
+                  {group.licenseState === "Overseas"
+                    ? countries
+                      .filter((country) => country.label !== "Australia")
+                      .map((country) => (
+                        <option key={country.value} value={country.label}>
+                          {country.label}
+                        </option>
+                      ))
+                    : <option value="Australia">Australia</option>
+                  }
+                </select>
+
+
+                {errors.licenseCountry && <div className="tooltip-message">{errors.licenseCountry}</div>}
               </div>
             </FormGroup>
 
