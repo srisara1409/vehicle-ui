@@ -78,22 +78,12 @@ export default function Homepage() {
     const start = bondStartDate ? new Date(bondStartDate) : null;
     const end = bondEndDate ? new Date(bondEndDate) : null;
 
-    if (!start || !end) {
-      alert("Please provide both bond start and end dates.");
+    if (!bondStartDate) {
+      alert("Bond start date is required.");
       return;
     }
 
-    if (end <= start) {
-      alert("End date must be after start date.");
-      return;
-    }
-
-    if (!bondStartDate || !bondEndDate) {
-      alert("Please provide both bond start and end dates.");
-      return;
-    }
-
-    if (bondEndDate <= bondStartDate) {
+    if (bondEndDate && bondEndDate <= bondStartDate) {
       alert("End date must be after start date.");
       return;
     }
@@ -106,7 +96,7 @@ export default function Homepage() {
     try {
 
       const formattedStart = format(bondStartDate, "dd-MM-yyyy hh:mm aa");
-      const formattedEnd = format(bondEndDate, "dd-MM-yyyy hh:mm aa");
+      const formattedEnd = bondEndDate ? format(bondEndDate, "dd-MM-yyyy hh:mm aa") : null;
 
       await fetch(`${config.BASE_URL}/vehicle/approve/${selectedVehicle.id}`, {
         method: "POST",
@@ -360,7 +350,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
 
         <div className="row">
           <div className="input-group">
-            <label>Start Date</label>
+            <label>Start Date <span style={{ color: 'red' }}>*</span></label>
             <DatePicker
               selected={startDate}
               onChange={setStartDate}
@@ -373,7 +363,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
             />
           </div>
           <div className="input-group">
-            <label>Start Time</label>
+            <label>Start Time <span style={{ color: 'red' }}>*</span></label>
             <DatePicker
               selected={startTime}
               onChange={setStartTime}
@@ -418,7 +408,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
 
         <div className="row">
           <div className="input-group">
-            <label>Registration Number</label>
+            <label> Registration Number <span style={{ color: 'red' }}>*</span></label>
             <input
               type="text"
               value={formInputs.registrationNumber || ""}

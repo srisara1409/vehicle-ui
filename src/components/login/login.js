@@ -28,9 +28,9 @@ const Login = () => {
       const message = await response.text();
 
       if (response.ok && message === "LOGIN_SUCCESS") {
-       // localStorage.setItem("isAuthenticated", "true");
-         sessionStorage.setItem("isAuthenticated", "true");
-      //  sessionStorage.setItem("userName", formData.userName); // Optional: store username
+        // localStorage.setItem("isAuthenticated", "true");
+        sessionStorage.setItem("isAuthenticated", "true");
+        //  sessionStorage.setItem("userName", formData.userName); // Optional: store username
 
         navigate('/homepage');
       } else if (message === "NOT_ADMIN") {
@@ -80,7 +80,7 @@ const Login = () => {
           />
 
           <div className="forgot-password">
-            <Link to="/register">FORGOT YOUR PASSWORD ?</Link>
+            <a href="#" onClick={(e) => e.preventDefault()}>FORGOT YOUR PASSWORD ?</a>
           </div>
         </form>
 

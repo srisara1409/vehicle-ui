@@ -71,6 +71,7 @@ html, body {
   min-width: 200px;
   display: flex;
   flex-direction: column;
+  border-radius: 5px;
 }
 
 .input-group label {
@@ -82,12 +83,26 @@ html, body {
 .input-group textarea {
   padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 6px;
   font-size: 0.95rem;
+  border-top-left-radius: 5px !important;
+  border-bottom-left-radius: 5px !important;
+  border-top-right-radius: 5px !important;
+  border-bottom-right-radius: 5px !important;
 }
 
 .full-width {
   width: 100%;
+}
+
+.file-link-box{
+  padding: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  border-top-left-radius: 5px !important;
+  border-bottom-left-radius: 5px !important;
+  border-top-right-radius: 5px !important;
+  border-bottom-right-radius: 5px !important;
+
 }
 
 /* ========================
