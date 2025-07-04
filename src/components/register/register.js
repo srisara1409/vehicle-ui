@@ -30,8 +30,8 @@ const Register = () => {
     state: '',
     postalCode: '',
     country: '',
-    checkBox: false,
-    financialInstName: '',
+    teamsAndConditions: false,
+    bankName: '',
     accountName: '',
     bsbNumber: '',
     accountNumber: '',
@@ -49,6 +49,8 @@ const Register = () => {
   const australianStates = ["ACT", "NSW", "QLD", "SA", "TAS", "VIC", "WA"];
   const [previews, setPreviews] = useState({ licensePhoto: null, passportCopy: null });
   const [submitted, setSubmitted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -64,7 +66,7 @@ const Register = () => {
     if (name === "licenseCountry") {
       setGroup((prev) => ({ ...prev, licenseCountry: value }));
     }
-    if (type === "checkbox") {
+    if (type === "teamsAndConditions") {
       setGroup({ ...group, [name]: checked });
     } else if (type === "file") {
       const file = files[0];
@@ -77,7 +79,7 @@ const Register = () => {
       setPreviews((prev) => ({ ...prev, [name]: URL.createObjectURL(file) }));
     } else {
       if ((name === "postalCode" || name === "bsbNumber" || name === "accountNumber") && !/^\d*$/.test(value)) return;
-      if ((name === "licenseState" || name === "city" || name === "state" || name === "country" || name === "financialInstName" || name === "accountName") && !/^[a-zA-Z\s]*$/.test(value)) return;
+      if ((name === "licenseState" || name === "city" || name === "state" || name === "country" || name === "bankName" || name === "accountName") && !/^[a-zA-Z\s]*$/.test(value)) return;
       setGroup((prev) => {
         const updated = { ...prev, [name]: value };
         if (submitted && errors[name]) {
@@ -100,7 +102,7 @@ const Register = () => {
       case "city":
       case "state":
       case "country":
-      case "financialInstName":
+      case "bankName":
       case "accountName":
       case "emergencyContactName":
       case "emergencyContactNumber":
@@ -120,7 +122,7 @@ const Register = () => {
         else delete newErrors[name];
         break;
       case "accountNumber":
-        if (!/^\d{6,10}$/.test(value)) newErrors[name] = "6–10 digit account number";
+        if (!/^\d{6,12}$/.test(value)) newErrors[name] = "6–12 digit account number";
         else delete newErrors[name];
         break;
       default:
@@ -134,7 +136,7 @@ const Register = () => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const mobilePattern = /^((\+61\d{9})|(\+64\d{8,9})|(04\d{8}))$/;
     const bsbPattern = /^\d{6}$/;
-    const accountPattern = /^\d{6,10}$/;
+    const accountPattern = /^\d{6,12}$/;
 
     if (!group.firstName) newErrors.firstName = 'First name is required';
     if (!group.lastName) newErrors.lastName = 'Last name is required';
@@ -155,13 +157,13 @@ const Register = () => {
     if (!group.postalCode) newErrors.postalCode = 'Enter valid Postal Code';
     if (!group.state) newErrors.state = 'Enter valid State';
     if (!group.country) newErrors.country = 'Enter valid Country';
-    if (!group.financialInstName) newErrors.financialInstName = 'Enter valid Bank Name';
+    if (!group.bankName) newErrors.bankName = 'Enter valid Bank Name';
     if (!group.accountName) newErrors.accountName = 'Enter valid Account Name';
     if (!bsbPattern.test(group.bsbNumber)) newErrors.bsbNumber = 'BSB must be 6 digits';
-    if (!accountPattern.test(group.accountNumber)) newErrors.accountNumber = '6–10 digit account number';
+    if (!accountPattern.test(group.accountNumber)) newErrors.accountNumber = '6–12 digit account number';
     if (!group.emergencyContactName) newErrors.emergencyContactName = 'Enter Emergency Contact Name';
     if (!group.emergencyContactNumber) newErrors.emergencyContactNumber = 'Enter Emergency Contact Number';
-    if (!group.checkBox) newErrors.checkBox = 'You must agree to Terms';
+    if (!group.teamsAndConditions) newErrors.teamsAndConditions = 'You must agree to Terms';
     const isSignatureEmpty = sigCanvas.current.isEmpty();
     setSignatureError(isSignatureEmpty ? 'Signature is required' : '');
 
@@ -198,7 +200,7 @@ const Register = () => {
       setGroup(initialFormState);
       setOption("");
       sigCanvas.current.clear();
-      navigate('/homepage');
+      navigate('/about');
     } catch (error) {
       console.error("Registration failed:", error);
       alert("Something went wrong. Please try again.");
@@ -479,6 +481,18 @@ const Register = () => {
                     onBlur={handleBlur}
                     accept="image/*,application/pdf"
                   />
+                  {previews.photoIdCopy && (
+                    <div style={{ marginTop: '10px' }}>
+                      <a
+                        href={previews.photoIdCopy}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '0.75rem', color: '#007bff' }}
+                      >
+                        {group.photoIdCopy?.type === "application/pdf" ? "View PDF" : "View Image"}
+                      </a>
+                    </div>
+                  )}
                 </div>
                 {submitted && errors.photoIdCopy && <div className="tooltip-message">{errors.photoIdCopy}</div>}
               </div>
@@ -536,10 +550,10 @@ const Register = () => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="financialInstName">Bank Name<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" for="bankName">Bank Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${submitted && errors.financialInstName ? 'input-error' : ''}`} type="text" name="financialInstName" id="financialInstName" value={group.financialInstName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter financial institution name" />
-            {submitted && errors.financialInstName && <div className="tooltip-message">{errors.financialInstName}</div>}
+            <input className={`form__input ${submitted && errors.bankName ? 'input-error' : ''}`} type="text" name="bankName" id="bankName" value={group.bankName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter Bank name" />
+            {submitted && errors.bankName && <div className="tooltip-message">{errors.bankName}</div>}
           </div>
         </FormGroup>
 
@@ -611,11 +625,19 @@ const Register = () => {
 
         <FormGroup check>
           <div className="tooltip-container">
-            <input className="terms-checkbox" type="checkbox" id="test1" name="checkBox" onChange={handleChange} onBlur={handleBlur} checked={group.checkBox} />
-            <label for="test1">
-              I agree to these <a href="https://www.naukri.com/termsconditions#g1" target="_blank" rel="noreferrer">Terms and Conditions</a>
+            <input className="terms-checkbox" type="checkbox" id="test1" name="teamsAndConditions" onChange={handleChange} onBlur={handleBlur} checked={group.teamsAndConditions} />
+            <label htmlFor="test1">
+              I agree to these{' '}
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(true)}
+                style={{ background: 'none', border: 'none', padding: 0, color: '#007bff', textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                Terms and Conditions
+              </button>
             </label>
-            {submitted && errors.checkBox && <div className="tooltip-message">{errors.checkBox}</div>}
+
+            {submitted && errors.teamsAndConditions && <div className="tooltip-message">{errors.teamsAndConditions}</div>}
           </div>
         </FormGroup>
 
@@ -625,6 +647,102 @@ const Register = () => {
             <Button className="cancel-btn" tag={Link} to="/homepage">Cancel</Button>
           </center>
         </FormGroup>
+
+        {showTermsModal && (
+          <div className="terms-overlay">
+            <div className="terms-content">
+              <button className="terms-close" onClick={() => setShowTermsModal(false)}>×</button>
+              <h4>ZUBER Terms and Conditions</h4>
+              <div className="terms-body">
+                <h5>1. Introduction</h5>
+                <ul className="terms-body">
+                  Welcome to ZUBER Car Rentals. By accessing or using our services—including vehicle rentals (cars, motorbikes, e-bikes),
+                  repairs, purchases, or accident vehicle exchanges—you agree to be bound by the following Terms and Conditions.
+                  These terms govern your rights and obligations and form a binding agreement between you and
+                  <strong> ZUBER CAR RENTAL PTY LTD</strong> (“ZUBER”, “we”, “us”, or “our”).
+                </ul>
+
+                <h5>2. Rental Eligibility</h5>
+                <ul>
+                  Renters must be at least 21 years old and hold a valid driver’s license (international licenses must be in English or officially translated).Proof of identity, address, and a security deposit (bond) are required.E-bike rentals are permitted from 18 years with valid photo ID.
+                </ul>
+
+                <h5>3. Rental Terms</h5>
+                <ul>
+                  Rental periods start and end on the agreed date/time.
+                  Vehicle must be returned in the same condition it was rented (excluding reasonable wear and tear).
+                  Late returns incur hourly or daily charges as per our rate schedule.
+                  Fuel must be refilled to the same level or refueling charges apply.
+                  Mileage limits may apply; additional km charges may be added.
+                </ul>
+
+                <h5>4. Insurance and Liability</h5>
+                <ul>
+                  All rentals include compulsory third-party insurance. Additional coverage is available for purchase.
+                  Renters are liable for damage due to misuse, negligence, or unauthorized use.
+                  Accidents must be reported within 12 hours with a police report if applicable.
+                  Insurance excess is payable unless waived with an excess reduction package.
+                </ul>
+
+                <h5>5. Prohibited Uses</h5>
+                <ul>
+                  Vehicles must not be used for commercial purposes unless pre-approved.
+                  No involvement in unlawful activities or races.
+                  Only licensed and authorized drivers may operate the vehicle.
+                  Off-road use is prohibited unless specified.
+                </ul>
+
+                <h5>6. Breakdown and Repairs</h5>
+                <ul>
+                  Vehicles are regularly maintained. Contact 24/7 support in case of breakdown.
+                  Unauthorized repairs or modifications are not allowed.
+                  ZUBER is not liable for delays due to breakdowns unless caused by known issues.
+                </ul>
+
+                <h5>7. Buying and Selling Vehicles</h5>
+                <ul>
+                  We sell used vehicles. Test drives are available upon booking with valid ID.
+                  All sales are final unless otherwise stated. Inspection reports are available.
+                  Owners may list or exchange used or damaged vehicles with us.
+                </ul>
+
+                <h5>8. Accident-Damage Exchange</h5>
+                <ul>
+                  We accept accident-damaged vehicles for exchange towards another ZUBER vehicle.
+                  Inspection and documentation are required.
+                  Final valuation is based on damage, age, and model.
+                </ul>
+
+                <h5>9. Payment and Bond</h5>
+                <ul>
+                  Full payment is due before rental begins (via card or bank transfer).
+                  A refundable bond is collected and released after inspection.
+                  Admin fees may apply for bond processing or contract breach.
+                </ul>
+
+                <h5>10. Cancellation and Refunds</h5>
+                <ul>
+                  Full refund (excluding fees) if cancelled 24+ hours before rental.
+                  Same-day cancellations may incur 50% charge.
+                  No refunds for early returns unless approved.
+                </ul>
+
+                <h5>11. Privacy and Data</h5>
+                <ul>
+                  We collect personal data for rental, payment, and insurance purposes.
+                  We do not share your data except as required by law or partners (e.g., insurers, regulators).
+                </ul>
+
+                <h5>12. Amendments</h5>
+                <p>
+                  ZUBER reserves the right to update these Terms and Conditions at any time.
+                  Continued use of the platform constitutes acceptance of the updated terms.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
 
       </Form>
     </div >

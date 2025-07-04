@@ -11,7 +11,7 @@ export default function UpdatePage() {
   const [userInfo, setUserInfo] = useState({
     firstName: '', lastName: '', dateOfBirth: '', email: '', mobileNumber: '',
     emergencyContactName: '', emergencyContactNumber: '',
-    addressLine: '', addressLine2: '', city: '', state: '', postalCode: '', country: '', financialInstName: '',
+    addressLine: '', addressLine2: '', city: '', state: '', postalCode: '', country: '', bankName: '',
     accountName: '', bsbNumber: '', accountNumber: '', vehicleType: '', licenseNumber: '', licenseState: '', licenseCountry: ''
   });
 
@@ -110,7 +110,7 @@ export default function UpdatePage() {
         {/* Financial Section */}
         <legend>Bank Details</legend>
         <div className="row">
-          {renderInput('financialInstName', 'Financial Institution Name', userInfo.financialInstName, handleUserChange)}
+          {renderInput('bankName', 'Bank Name', userInfo.bankName, handleUserChange)}
           {renderInput('accountName', 'Name as per Bank', userInfo.accountName, handleUserChange)}
         </div>
         <div className="row">

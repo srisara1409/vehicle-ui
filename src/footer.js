@@ -6,9 +6,9 @@ const Footer = () => (
     <div className="footer-top">
       <p>©2025 Zuber Car Rental Pty Ltd. ABN xx xxx xxx xxx. All rights reserved.</p>
       <div className="footer-links">
-        <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
-        <span>|</span>
-        <a href="/terms-of-use" target="_blank" rel="noopener noreferrer">Terms of Use</a>
+        {/* <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+        <span>|</span> */}
+        {/* <a href="/terms-of-use" target="_blank" rel="noopener noreferrer">Terms of Use</a> */}
         {/* <span>|</span> */}
         {/* <a href="/contact" target="_blank" rel="noopener noreferrer">Contact</a> */}
       </div>
