@@ -75,3 +75,4 @@ npm install reactstrap
 npm install --save bootstrap
 npm install react-router-dom
 npm install styled-components
+npm install react-icons

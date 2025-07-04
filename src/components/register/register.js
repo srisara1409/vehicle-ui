@@ -66,7 +66,7 @@ const Register = () => {
     if (name === "licenseCountry") {
       setGroup((prev) => ({ ...prev, licenseCountry: value }));
     }
-    if (type === "teamsAndConditions") {
+    if (type === "checkbox") {
       setGroup({ ...group, [name]: checked });
     } else if (type === "file") {
       const file = files[0];
