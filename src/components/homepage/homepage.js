@@ -205,12 +205,12 @@ export default function Homepage() {
   const filteredVehicles = vehicles.filter((v) => {
     const term = searchText.toLowerCase();
     return (
-      v.firstName.toLowerCase().includes(term) ||
-      v.lastName.toLowerCase().includes(term) ||
-      v.licenseNumber.toLowerCase().includes(term) ||
-      v.email.toLowerCase().includes(term) ||
-      v.mobileNumber.toLowerCase().includes(term) ||
-      v.registrationNumber.toLowerCase().includes(term)
+      (v.firstName || "").toLowerCase().includes(term) ||
+      (v.lastName || "").toLowerCase().includes(term) ||
+      (v.licenseNumber || "").toLowerCase().includes(term) ||
+      (v.email || "").toLowerCase().includes(term) ||
+      (v.mobileNumber || "").toLowerCase().includes(term) ||
+      (v.registrationNumber || "").toLowerCase().includes(term)
     );
   });
 
