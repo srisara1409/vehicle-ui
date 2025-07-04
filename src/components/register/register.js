@@ -38,62 +38,95 @@ const Register = () => {
     emergencyContactName: '',
     emergencyContactNumber: ''
   };
+
   const sigCanvas = useRef(null);
   const [group, setGroup] = useState(initialFormState);
   const [option, setOption] = useState("");
   const [errors, setErrors] = useState({});
   const [signatureError, setSignatureError] = useState('');
-  const countries = countryList().getData(); // Returns array of { label, value }
-
+  const countries = countryList().getData();
   const navigate = useNavigate();
-  const australianStates = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT"];
+  const australianStates = ["ACT", "NSW", "QLD", "SA", "TAS", "VIC", "WA"];
+  const [previews, setPreviews] = useState({ licensePhoto: null, passportCopy: null });
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
-
     if (name === "licenseState") {
       if (australianStates.includes(value)) {
-        setGroup((prev) => ({
-          ...prev,
-          licenseState: value,
-          licenseCountry: "Australia"
-        }));
+        setGroup((prev) => ({ ...prev, licenseState: value, licenseCountry: "Australia" }));
       } else if (value === "Overseas") {
-        setGroup((prev) => ({
-          ...prev,
-          licenseState: value,
-          licenseCountry: ""
-        }));
+        setGroup((prev) => ({ ...prev, licenseState: value, licenseCountry: "" }));
       } else {
         setGroup((prev) => ({ ...prev, licenseState: value }));
       }
     }
-
     if (name === "licenseCountry") {
       setGroup((prev) => ({ ...prev, licenseCountry: value }));
     }
-
-
     if (type === "checkbox") {
       setGroup({ ...group, [name]: checked });
     } else if (type === "file") {
       const file = files[0];
-      if (file && file.size > 100 * 1024 * 1024) {
-        alert("File size should not exceed 100MB.");
-        return;
-      }
+      if (!file) return;
+      const isValidType = file.type.startsWith("image/") || file.type === "application/pdf";
+      const isValidSize = file.size <= 10 * 1024 * 1024;
+      if (!isValidType) alert("Only image files and PDFs are allowed.");
+      if (!isValidSize) alert("File must be less than 10MB.");
       setGroup({ ...group, [name]: file });
+      setPreviews((prev) => ({ ...prev, [name]: URL.createObjectURL(file) }));
     } else {
-      // Numeric-only fields
-      if ((name === "postalCode" || name === "bsbNumber" || name === "accountNumber") && !/^\d*$/.test(value)) {
-        return; // Skip update if input is not all digits
-      }
-      // Alphabet-only field
-      if ((name === "licenseState" || name === "city" || name === "state" || name === "country" || name === "financialInstName" || name === "accountName") && !/^[a-zA-Z\s]*$/.test(value)) {
-        return;
-      }
-      setGroup({ ...group, [name]: value });
+      if ((name === "postalCode" || name === "bsbNumber" || name === "accountNumber") && !/^\d*$/.test(value)) return;
+      if ((name === "licenseState" || name === "city" || name === "state" || name === "country" || name === "financialInstName" || name === "accountName") && !/^[a-zA-Z\s]*$/.test(value)) return;
+      setGroup((prev) => {
+        const updated = { ...prev, [name]: value };
+        if (submitted && errors[name]) {
+          const newErrors = { ...errors };
+          delete newErrors[name];
+          setErrors(newErrors);
+        }
+        return updated;
+      });
     }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const newErrors = { ...errors };
+    switch (name) {
+      case "firstName":
+      case "lastName":
+      case "addressLine1":
+      case "city":
+      case "state":
+      case "country":
+      case "financialInstName":
+      case "accountName":
+      case "emergencyContactName":
+      case "emergencyContactNumber":
+        if (!value.trim()) newErrors[name] = "This field is required";
+        else delete newErrors[name];
+        break;
+      case "mobileNumber":
+        if (!/^((\+61\d{9})|(\+64\d{8,9})|(04\d{8}))$/.test(value)) newErrors[name] = "Enter a valid AU/NZ mobile number";
+        else delete newErrors[name];
+        break;
+      case "email":
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) newErrors[name] = "Enter a valid email ID";
+        else delete newErrors[name];
+        break;
+      case "bsbNumber":
+        if (!/^\d{6}$/.test(value)) newErrors[name] = "BSB must be 6 digits";
+        else delete newErrors[name];
+        break;
+      case "accountNumber":
+        if (!/^\d{6,10}$/.test(value)) newErrors[name] = "6–10 digit account number";
+        else delete newErrors[name];
+        break;
+      default:
+        break;
+    }
+    setErrors(newErrors);
   };
 
   const validate = () => {
@@ -106,7 +139,7 @@ const Register = () => {
     if (!group.firstName) newErrors.firstName = 'First name is required';
     if (!group.lastName) newErrors.lastName = 'Last name is required';
     if (!group.dateOfBirth) newErrors.dateOfBirth = 'Date of Birth is required';
-    if (!mobilePattern.test(group.mobileNumber)) { newErrors.mobileNumber = 'Enter a valid AU/NZ mobile number'; }
+    if (!mobilePattern.test(group.mobileNumber)) newErrors.mobileNumber = 'Enter a valid AU/NZ mobile number';
     if (!emailPattern.test(group.email)) newErrors.email = 'Enter a valid email ID';
     if (!option) newErrors.option = 'Please select a vehicle type';
     if (option === 'car' || option === 'motorbike') {
@@ -129,7 +162,6 @@ const Register = () => {
     if (!group.emergencyContactName) newErrors.emergencyContactName = 'Enter Emergency Contact Name';
     if (!group.emergencyContactNumber) newErrors.emergencyContactNumber = 'Enter Emergency Contact Number';
     if (!group.checkBox) newErrors.checkBox = 'You must agree to Terms';
-
     const isSignatureEmpty = sigCanvas.current.isEmpty();
     setSignatureError(isSignatureEmpty ? 'Signature is required' : '');
 
@@ -146,25 +178,22 @@ const Register = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setSubmitted(true);  // Only enable error messages after first submit
     if (!validate()) return;
     try {
 
       const signature = sigCanvas.current
         ?.getCanvas()
         ?.toDataURL('image/png');
-
       const fullData = { ...group, vehicleType: option, signature };
       const formData = new FormData();
       formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
-
       if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
       if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
       if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
-
       await axios.post(`${config.BASE_URL}/register`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
       alert('Vehicle registered. Awaiting admin approval.');
       setGroup(initialFormState);
       setOption("");
@@ -175,25 +204,28 @@ const Register = () => {
       alert("Something went wrong. Please try again.");
     }
   };
-
   return (
     <div>
-      <Form className="form" onSubmit={handleSubmit}>
+      <Form className="form" onSubmit={handleSubmit} onKeyDown={(e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+        }
+      }}>
         <center><p>Register your Details</p></center>
 
         <FormGroup className="form-row">
           <label className="form__label" for="firstName">First Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.firstName ? 'input-error' : ''}`} type="text" name="firstName" id="firstName" value={group.firstName} onChange={handleChange} placeholder="Enter your first name" />
-            {errors.firstName && <div className="tooltip-message">{errors.firstName}</div>}
+            <input className={`form__input ${submitted && errors.firstName ? 'input-error' : ''}`} type="text" name="firstName" id="firstName" value={group.firstName} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your first name" />
+            {submitted && errors.firstName && <div className="tooltip-message">{errors.firstName}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="lastName">Last Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.lastName ? 'input-error' : ''}`} type="text" name="lastName" id="lastName" value={group.lastName} onChange={handleChange} placeholder="Enter your last name" />
-            {errors.lastName && <div className="tooltip-message">{errors.lastName}</div>}
+            <input className={`form__input ${submitted && errors.lastName ? 'input-error' : ''}`} type="text" name="lastName" id="lastName" value={group.lastName} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your last name" />
+            {submitted && errors.lastName && <div className="tooltip-message">{errors.lastName}</div>}
           </div>
         </FormGroup>
 
@@ -201,7 +233,7 @@ const Register = () => {
           <label className="form__label" for="dateOfBirth">Date of Birth<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <DatePicker
-              className={`form__input ${errors.dateOfBirth ? 'input-error' : ''}`}
+              className={`form__input ${submitted && errors.dateOfBirth ? 'input-error' : ''}`}
               selected={
                 group.dateOfBirth
                   ? (() => {
@@ -226,6 +258,7 @@ const Register = () => {
                   }
                 });
               }}
+              onCalendarClose={() => handleBlur({ target: { name: 'dateOfBirth', value: group.dateOfBirth } })}
 
               onChangeRaw={(e) => {
                 const input = e.target.value;
@@ -256,23 +289,23 @@ const Register = () => {
               yearDropdownItemNumber={100}
               id="dateOfBirth"
             />
-            {errors.dateOfBirth && <div className="tooltip-message">{errors.dateOfBirth}</div>}
+            {submitted && errors.dateOfBirth && <div className="tooltip-message">{errors.dateOfBirth}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="mobileNumber">Mobile Number<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.mobileNumber ? 'input-error' : ''}`} type="text" name="mobileNumber" id="mobileNumber" value={group.mobileNumber} maxLength="12" onChange={handleChange} placeholder="Enter your mobile number" />
-            {errors.mobileNumber && <div className="tooltip-message">{errors.mobileNumber}</div>}
+            <input className={`form__input ${submitted && errors.mobileNumber ? 'input-error' : ''}`} type="text" name="mobileNumber" id="mobileNumber" value={group.mobileNumber} maxLength="12" onChange={handleChange} onBlur={handleBlur} placeholder="Enter your mobile number" />
+            {submitted && errors.mobileNumber && <div className="tooltip-message">{errors.mobileNumber}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="email">Email ID<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.email ? 'input-error' : ''}`} type="text" name="email" id="email" value={group.email} onChange={handleChange} placeholder="xyz@company.com" />
-            {errors.email && <div className="tooltip-message">{errors.email}</div>}
+            <input className={`form__input ${submitted && errors.email ? 'input-error' : ''}`} type="text" name="email" id="email" value={group.email} onChange={handleChange} onBlur={handleBlur} placeholder="xyz@company.com" />
+            {submitted && errors.email && <div className="tooltip-message">{errors.email}</div>}
           </div>
         </FormGroup>
 
@@ -282,13 +315,13 @@ const Register = () => {
             <select
               value={option}
               onChange={(e) => setOption(e.target.value)}
-              className={`form__input ${errors.option ? 'input-error' : ''}`}>
+              className={`form__input ${submitted && errors.option ? 'input-error' : ''}`}>
               <option value="">-- Choose --</option>
               <option value="car">Car</option>
               <option value="motorbike">Motor-Bike</option>
               <option value="ebike">E-Bike</option>
             </select>
-            {errors.option && <div className="tooltip-message">{errors.option}</div>}
+            {submitted && errors.option && <div className="tooltip-message">{errors.option}</div>}
           </div>
         </FormGroup>
 
@@ -299,15 +332,16 @@ const Register = () => {
               <div className="tooltip-container" style={{ flex: 1 }}>
                 <input
                   type="text"
-                  className={`form__input ${errors.licenseNumber ? 'input-error' : ''}`}
+                  className={`form__input ${submitted && errors.licenseNumber ? 'input-error' : ''}`}
                   name="licenseNumber"
                   id="licenseNumber"
-                  maxLength="10"
+                  maxLength="20"
                   value={group.licenseNumber || ''}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="Enter your license number"
                 />
-                {errors.licenseNumber && <div className="tooltip-message">{errors.licenseNumber}</div>}
+                {submitted && errors.licenseNumber && <div className="tooltip-message">{errors.licenseNumber}</div>}
               </div>
             </FormGroup>
 
@@ -315,23 +349,24 @@ const Register = () => {
               <label className="form__label" for="licenseState">License State<span style={{ color: 'red' }}>*</span></label>
               <div className="tooltip-container" style={{ flex: 1 }}>
                 <select
-                  className={`form__input ${errors.licenseState ? 'input-error' : ''}`}
+                  className={`form__input ${submitted && errors.licenseState ? 'input-error' : ''}`}
                   name="licenseState"
                   id="licenseState"
                   value={group.licenseState || ''}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                 >
                   <option value="">-- Select State --</option>
+                  <option value="ACT">Australian Capital Territory (ACT)</option>
                   <option value="NSW">New South Wales (NSW)</option>
-                  <option value="VIC">Victoria (VIC)</option>
                   <option value="QLD">Queensland (QLD)</option>
-                  <option value="WA">Western Australia (WA)</option>
                   <option value="SA">South Australia (SA)</option>
                   <option value="TAS">Tasmania (TAS)</option>
-                  <option value="ACT">Australian Capital Territory (ACT)</option>
+                  <option value="VIC">Victoria (VIC)</option>
+                  <option value="WA">Western Australia (WA)</option>
                   <option value="Overseas">Overseas</option>
                 </select>
-                {errors.licenseState && <div className="tooltip-message">{errors.licenseState}</div>}
+                {submitted && errors.licenseState && <div className="tooltip-message">{errors.licenseState}</div>}
               </div>
             </FormGroup>
 
@@ -339,11 +374,12 @@ const Register = () => {
               <label className="form__label" htmlFor="licenseCountry">License Country<span style={{ color: 'red' }}>*</span></label>
               <div className="tooltip-container" style={{ flex: 1 }}>
                 <select
-                  className={`form__input fixed-width-dropdown ${errors.licenseCountry ? 'input-error' : ''}`}
+                  className={`form__input fixed-width-dropdown ${submitted && errors.licenseCountry ? 'input-error' : ''}`}
                   name="licenseCountry"
                   id="licenseCountry"
                   value={group.licenseCountry}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                 >
                   <option value="">-- Select Country --</option>
 
@@ -359,8 +395,7 @@ const Register = () => {
                   }
                 </select>
 
-
-                {errors.licenseCountry && <div className="tooltip-message">{errors.licenseCountry}</div>}
+                {submitted && errors.licenseCountry && <div className="tooltip-message">{errors.licenseCountry}</div>}
               </div>
             </FormGroup>
 
@@ -370,14 +405,28 @@ const Register = () => {
                 <div className="file-upload-wrapper">
                   <input
                     type="file"
-                    className={`form__input file-upload ${errors.licensePhoto ? 'input-error' : ''}`}
+                    className={`form__input file-upload ${submitted && errors.licensePhoto ? 'input-error' : ''}`}
                     name="licensePhoto"
                     id="licensePhoto"
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     accept="image/*,application/pdf"
                   />
+                  {previews.licensePhoto && (
+                    <div style={{ marginTop: '10px' }}>
+                      <a
+                        href={previews.licensePhoto}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '0.75rem', color: '#007bff' }}
+                      >
+                        {group.licensePhoto?.type === "application/pdf" ? "View PDF" : "View Image"}
+                      </a>
+                    </div>
+                  )}
+
                 </div>
-                {errors.licensePhoto && <div className="tooltip-message">{errors.licensePhoto}</div>}
+                {submitted && errors.licensePhoto && <div className="tooltip-message">{errors.licensePhoto}</div>}
               </div>
             </FormGroup>
 
@@ -387,14 +436,28 @@ const Register = () => {
                 <div className="file-upload-wrapper">
                   <input
                     type="file"
-                    className={`form__input file-upload ${errors.passportCopy ? 'input-error' : ''}`}
+                    className={`form__input file-upload ${submitted && errors.passportCopy ? 'input-error' : ''}`}
                     name="passportCopy"
                     id="passportCopy"
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     accept="image/*,application/pdf"
                   />
+                  {previews.passportCopy && (
+                    <div style={{ marginTop: '10px' }}>
+                      <a
+                        href={previews.passportCopy}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '0.75rem', color: '#007bff' }}
+                      >
+                        {group.passportCopy?.type === "application/pdf" ? "View PDF" : "View Image"}
+                      </a>
+                    </div>
+                  )}
+
                 </div>
-                {errors.passportCopy && <div className="tooltip-message">{errors.passportCopy}</div>}
+                {submitted && errors.passportCopy && <div className="tooltip-message">{errors.passportCopy}</div>}
               </div>
             </FormGroup>
           </div>
@@ -409,14 +472,15 @@ const Register = () => {
                 <div className="file-upload-wrapper">
                   <input
                     type="file"
-                    className={`form__input file-upload ${errors.photoIdCopy ? 'input-error' : ''}`}
+                    className={`form__input file-upload ${submitted && errors.photoIdCopy ? 'input-error' : ''}`}
                     name="photoIdCopy"
                     id="photoIdCopy"
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     accept="image/*,application/pdf"
                   />
                 </div>
-                {errors.photoIdCopy && <div className="tooltip-message">{errors.photoIdCopy}</div>}
+                {submitted && errors.photoIdCopy && <div className="tooltip-message">{errors.photoIdCopy}</div>}
               </div>
             </FormGroup>
           </div>
@@ -425,8 +489,8 @@ const Register = () => {
         <FormGroup className="form-row">
           <label className="form__label" for="addressLine1">Address Line 1<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.addressLine1 ? 'input-error' : ''}`} type="text" name="addressLine1" id="addressLine1" value={group.addressLine1} onChange={handleChange} placeholder="Enter your street address 1" />
-            {errors.addressLine1 && <div className="tooltip-message">{errors.addressLine1}</div>}
+            <input className={`form__input ${submitted && errors.addressLine1 ? 'input-error' : ''}`} type="text" name="addressLine1" id="addressLine1" value={group.addressLine1} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your street address 1" />
+            {submitted && errors.addressLine1 && <div className="tooltip-message">{errors.addressLine1}</div>}
           </div>
         </FormGroup>
 
@@ -434,7 +498,7 @@ const Register = () => {
           <label className="form__label" htmlFor="addressLine2">Address Line 2</label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className="form__input" type="text" name="addressLine2" id="addressLine2"
-              value={group.addressLine2 || ''} onChange={handleChange} placeholder="Enter your street address 2"
+              value={group.addressLine2 || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your street address 2"
             />
           </div>
         </FormGroup>
@@ -442,108 +506,116 @@ const Register = () => {
         <FormGroup className="form-row">
           <label className="form__label" for="city">City<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.city ? 'input-error' : ''}`} type="text" name="city" id="city" value={group.city} onChange={handleChange} placeholder="Enter city" />
-            {errors.city && <div className="tooltip-message">{errors.city}</div>}
+            <input className={`form__input ${submitted && errors.city ? 'input-error' : ''}`} type="text" name="city" id="city" value={group.city} onChange={handleChange} onBlur={handleBlur} placeholder="Enter city" />
+            {submitted && errors.city && <div className="tooltip-message">{errors.city}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="state">State<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.state ? 'input-error' : ''}`} type="text" name="state" id="state" value={group.state} onChange={handleChange} placeholder="Enter state" />
-            {errors.state && <div className="tooltip-message">{errors.state}</div>}
+            <input className={`form__input ${submitted && errors.state ? 'input-error' : ''}`} type="text" name="state" id="state" value={group.state} onChange={handleChange} onBlur={handleBlur} placeholder="Enter state" />
+            {submitted && errors.state && <div className="tooltip-message">{errors.state}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="postalCode">Postal Code<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.postalCode ? 'input-error' : ''}`} type="text" name="postalCode" id="postalCode" value={group.postalCode} maxLength="4" onChange={handleChange} placeholder="Enter postal code" />
-            {errors.postalCode && <div className="tooltip-message">{errors.postalCode}</div>}
+            <input className={`form__input ${submitted && errors.postalCode ? 'input-error' : ''}`} type="text" name="postalCode" id="postalCode" value={group.postalCode} maxLength="4" onChange={handleChange} onBlur={handleBlur} placeholder="Enter postal code" />
+            {submitted && errors.postalCode && <div className="tooltip-message">{errors.postalCode}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="country">Country<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.country ? 'input-error' : ''}`} type="text" name="country" id="country" value={group.country || ''} onChange={handleChange} placeholder="Enter your country" />
-            {errors.country && <div className="tooltip-message">{errors.country}</div>}
+            <input className={`form__input ${submitted && errors.country ? 'input-error' : ''}`} type="text" name="country" id="country" value={group.country || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your country" />
+            {submitted && errors.country && <div className="tooltip-message">{errors.country}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="financialInstName">Financial Institution Name<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" for="financialInstName">Bank Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.financialInstName ? 'input-error' : ''}`} type="text" name="financialInstName" id="financialInstName" value={group.financialInstName || ''} onChange={handleChange} placeholder="Enter financial institution name" />
-            {errors.financialInstName && <div className="tooltip-message">{errors.financialInstName}</div>}
+            <input className={`form__input ${submitted && errors.financialInstName ? 'input-error' : ''}`} type="text" name="financialInstName" id="financialInstName" value={group.financialInstName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter financial institution name" />
+            {submitted && errors.financialInstName && <div className="tooltip-message">{errors.financialInstName}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="accountName">Name as per Bank<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.accountName ? 'input-error' : ''}`} type="text" name="accountName" id="accountName" value={group.accountName || ''} onChange={handleChange} placeholder="Enter account holder name" />
-            {errors.accountName && <div className="tooltip-message">{errors.accountName}</div>}
+            <input className={`form__input ${submitted && errors.accountName ? 'input-error' : ''}`} type="text" name="accountName" id="accountName" value={group.accountName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter account holder name" />
+            {submitted && errors.accountName && <div className="tooltip-message">{errors.accountName}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="bsbNumber">BSB No.<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.bsbNumber ? 'input-error' : ''}`} type="text" name="bsbNumber" id="bsbNumber" value={group.bsbNumber || ''} maxLength="6" onChange={handleChange} placeholder="Enter 6-digit BSB" />
-            {errors.bsbNumber && <div className="tooltip-message">{errors.bsbNumber}</div>}
+            <input className={`form__input ${submitted && errors.bsbNumber ? 'input-error' : ''}`} type="text" name="bsbNumber" id="bsbNumber" value={group.bsbNumber || ''} maxLength="6" onChange={handleChange} onBlur={handleBlur} placeholder="Enter 6-digit BSB" />
+            {submitted && errors.bsbNumber && <div className="tooltip-message">{errors.bsbNumber}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="accountNumber">Account Number<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.accountNumber ? 'input-error' : ''}`} type="text" name="accountNumber" id="accountNumber" value={group.accountNumber || ''} maxLength="10" onChange={handleChange} placeholder="Enter 6–10 digit account number" />
-            {errors.accountNumber && <div className="tooltip-message">{errors.accountNumber}</div>}
+            <input className={`form__input ${submitted && errors.accountNumber ? 'input-error' : ''}`} type="text" name="accountNumber" id="accountNumber" value={group.accountNumber || ''} maxLength="12" onChange={handleChange} onBlur={handleBlur} placeholder="Enter 6–12 digit account number" />
+            {submitted && errors.accountNumber && <div className="tooltip-message">{errors.accountNumber}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="emergencyContactName">Emergency Contact Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.emergencyContactName ? 'input-error' : ''}`} type="text" name="emergencyContactName" id="emergencyContactName" value={group.emergencyContactName || ''} onChange={handleChange} placeholder="Enter emergency contact name" />
-            {errors.emergencyContactName && <div className="tooltip-message">{errors.emergencyContactName}</div>}
+            <input className={`form__input ${submitted && errors.emergencyContactName ? 'input-error' : ''}`} type="text" name="emergencyContactName" id="emergencyContactName" value={group.emergencyContactName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter emergency contact name" />
+            {submitted && errors.emergencyContactName && <div className="tooltip-message">{errors.emergencyContactName}</div>}
           </div>
         </FormGroup>
 
         <FormGroup className="form-row">
           <label className="form__label" for="emergencyContactNumber">Emergency Contact No.<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${errors.emergencyContactNumber ? 'input-error' : ''}`} type="text" name="emergencyContactNumber" id="emergencyContactNumber" value={group.emergencyContactNumber || ''} maxLength="12" onChange={handleChange} placeholder="Enter emergency contact number" />
-            {errors.emergencyContactNumber && <div className="tooltip-message">{errors.emergencyContactNumber}</div>}
+            <input className={`form__input ${submitted && errors.emergencyContactNumber ? 'input-error' : ''}`} type="text" name="emergencyContactNumber" id="emergencyContactNumber" value={group.emergencyContactNumber || ''} maxLength="12" onChange={handleChange} onBlur={handleBlur} placeholder="Enter emergency contact number" />
+            {submitted && errors.emergencyContactNumber && <div className="tooltip-message">{errors.emergencyContactNumber}</div>}
           </div>
         </FormGroup>
 
         <FormGroup>
           <label className="form__label">Signature<span style={{ color: 'red' }}>*</span></label>
-          <div className="signature-container">
+          <div className="signature-container tooltip-container">
             <SignatureCanvas
               ref={sigCanvas}
               backgroundColor="#fff"
               penColor="black"
               canvasProps={{ width: 400, height: 100, className: "sigCanvas" }}
+              onEnd={() => {
+                if (submitted && !sigCanvas.current.isEmpty()) {
+                  setSignatureError(''); // clear signature error once user signs
+                }
+              }}
             />
             <div className="clear-btn-wrapper">
-              <button type="button" className="clear-btn-styled" onClick={() => sigCanvas.current.clear()}>
+              <button type="button" className="clear-btn-styled" onClick={() => {
+                sigCanvas.current.clear();
+                setSignatureError('Signature is required'); // reset error on clear if submitted
+              }}>
                 Clear
               </button>
-              {signatureError && <div className="tooltip-message" style={{ display: 'block', marginTop: '5px' }}>{signatureError}</div>}
+              {submitted && signatureError && <div className="tooltip-message" style={{ display: 'block', marginTop: '5px' }}>{signatureError}</div>}
             </div>
           </div>
         </FormGroup>
 
         <FormGroup check>
           <div className="tooltip-container">
-            <input className="terms-checkbox" type="checkbox" id="test1" name="checkBox" onChange={handleChange} checked={group.checkBox} />
+            <input className="terms-checkbox" type="checkbox" id="test1" name="checkBox" onChange={handleChange} onBlur={handleBlur} checked={group.checkBox} />
             <label for="test1">
               I agree to these <a href="https://www.naukri.com/termsconditions#g1" target="_blank" rel="noreferrer">Terms and Conditions</a>
             </label>
-            {errors.checkBox && <div className="tooltip-message">{errors.checkBox}</div>}
+            {submitted && errors.checkBox && <div className="tooltip-message">{errors.checkBox}</div>}
           </div>
         </FormGroup>
 

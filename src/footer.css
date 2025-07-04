@@ -1,10 +1,53 @@
-
 /* Sticky Footer */
 .footer {
     background-color: #ff4f19;
     color: black;
     text-align: center;
-    padding: 1rem 0;
-    font-size: 1.1rem;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+  }
+  
+  .footer-top,
+  .footer-bottom {
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer-links {
+    margin-top: 0.5rem;
+  }
+  
+  .footer-links a {
+    color: black;
+    margin: 0 0.5rem;
+    text-decoration: none;
     font-weight: 600;
   }
+  
+  .footer-links span {
+    margin: 0 0.3rem;
+    color: black;
+  }
+  
+  .footer-links a:hover {
+    text-decoration: underline;
+  }
+  
+  .social-icons {
+    margin-top: 0.5rem;
+  }
+  
+  .social-icons a {
+    margin: 0 0.4rem;
+    font-size: 1.2rem;
+    color: black;
+    transition: color 0.3s ease;
+  }
+  
+  .social-icons a:hover {
+    color: white;
+  }
+  

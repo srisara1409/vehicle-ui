@@ -55,7 +55,12 @@
   margin-bottom: 6px;
 }
 
-.input-group input,
+.input-group input  {
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+  }
 .input-group textarea {
   padding: 10px 12px;
   border: 1px solid #ccc;
@@ -107,6 +112,7 @@
   display: inline-block;
   margin-top: 6px;
   padding: 8px 14px;
+  font-size: 14px;
   background-color: #f0f4ff;
   border: 1px solid #1d4ed8;
   border-radius: 6px;
