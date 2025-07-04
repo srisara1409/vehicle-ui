@@ -21,11 +21,10 @@ function App() {
             <div className="content">
                 <Routes>
                     <Route path="/" element={<Login />} />
-                     <Route path="/register" element={<Register />} />
+                    <Route path="/register" element={<Register />} />
                     <Route path="/homepage" element={<PrivateRoute><Home /></PrivateRoute>} />
                     <Route path="/update/:id" element={<PrivateRoute><UpdatePage /></PrivateRoute>} />
                     <Route path="/login" element={< Login />} />
-                   
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                 </Routes>

@@ -19,9 +19,9 @@ const Navbar = () => {
 
         <div className="nav-menu">
           {isLoggedIn && <Link to="/homepage">Home</Link>}
-          <Link to="/register">Sign Up / Register</Link>
           <Link to="/about">About</Link>
-          <Link to="/contact">Contact Us</Link>
+          <Link to="/contact">Contact us</Link>
+		  <Link to="/register">Sign up / Register</Link>
         </div>
 
         {!isLoggedIn ? (

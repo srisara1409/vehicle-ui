@@ -27,7 +27,10 @@ export default function Homepage() {
     registrationNumber: "",
     year: "",
     fuelType: "",
-    note: ""
+    note: "",
+    licenseFile: null,
+    passportFile: null,
+    photoIdFile: null,
   });
 
   useEffect(() => {
@@ -37,11 +40,40 @@ export default function Homepage() {
       .catch((err) => console.error("Error fetching data:", err));
   }, []);
 
+  // 🔄 Auto-fill vehicle details by registration number (status = 'not sold')
+  useEffect(() => {
+    const fetchVehicleDetails = async () => {
+      if (formInputs.registrationNumber.trim().length >= 3) {
+        try {
+          const res = await fetch(`${config.BASE_URL}/vehicle/search?regNumber=${formInputs.registrationNumber.trim()}`);
+          if (res.ok) {
+            const data = await res.json();
+            setFormInputs((prev) => ({
+              ...prev,
+              make: data.make,
+              model: data.model,
+              year: data.year,
+              vehicleType: data.vehicleType
+            }));
+          } else {
+            console.log("No matching vehicle found or vehicle is sold.");
+          }
+        } catch (error) {
+          console.error("Error fetching vehicle by registration number:", error);
+        }
+      }
+    };
+
+    fetchVehicleDetails();
+  }, [formInputs.registrationNumber]);
+
+
   const handleApprove = (vehicle) => {
     setSelectedVehicle(vehicle);
     setFormInputs({
       ...formInputs,
       userId: vehicle.id,
+      vehicleType: vehicle.vehicleType || "",
       registrationNumber: vehicle.registrationNumber || vehicle.vehicles?.[0]?.registrationNumber || "",
       make: vehicle.make || "",
       model: vehicle.model || "",
@@ -66,6 +98,7 @@ export default function Homepage() {
       bondEndDate,
       licenseFile,
       passportFile,
+      photoIdFile,
       bankFile
     } = formInputs;
 
@@ -75,8 +108,8 @@ export default function Homepage() {
       newErrors.registrationNumber = "Registration Number is required.";
     }
 
-    const start = bondStartDate ? new Date(bondStartDate) : null;
-    const end = bondEndDate ? new Date(bondEndDate) : null;
+    // const start = bondStartDate ? new Date(bondStartDate) : null;
+    // const end = bondEndDate ? new Date(bondEndDate) : null;
 
     if (!bondStartDate) {
       alert("Bond start date is required.");
@@ -120,6 +153,7 @@ export default function Homepage() {
 
       if (licenseFile) fileForm.append("licenseFile", licenseFile);
       if (passportFile) fileForm.append("passportFile", passportFile);
+      if (photoIdFile) fileForm.append("photoIdFile", photoIdFile);
       if (bankFile) fileForm.append("bankFile", bankFile);
 
       if (licenseFile || passportFile || bankFile) {
@@ -129,7 +163,7 @@ export default function Homepage() {
         });
       }
 
-      alert("Approved and PDF sent to user.");
+      alert("User registration has been successfully approved.");
       setShowModal(false);
       setFormInputs({
         bondAmount: "",
@@ -222,10 +256,9 @@ export default function Homepage() {
                       <th>Email</th>
                       <th>Vehicle Reg No</th>
                       <th>License No</th>
-                      <th>License Copy</th>
-                      <th>Passport</th>
+                      <th colSpan="2">ID Documents</th>
                       <th>Bank Statement</th>
-                      <th>Signature</th>
+                      {/* <th>Signature</th> */}
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -240,22 +273,34 @@ export default function Homepage() {
                         <td>{v.email}</td>
                         <td>{v.registrationNumber || (v.vehicles?.[0]?.registrationNumber || "N/A")}</td>
                         <td>{v.licenseNumber}</td>
-                        <td>
-                          <a href={`${config.BASE_URL}/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
-                        </td>
-                        <td>
-                          <a href={`${config.BASE_URL}/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
-                        </td>
+                        {["car", "motor-bike"].includes(v.vehicleType?.toLowerCase()) ? (
+                          <>
+                            <td>
+                              <a href={`${config.BASE_URL}/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
+                            </td>
+                            <td>
+                              <a href={`${config.BASE_URL}/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td colSpan="2">
+                              <a href={`${config.BASE_URL}/register/file/${v.id}/photoid`} target="_blank" rel="noopener noreferrer">Photo ID</a>
+                            </td>
+                          </>
+                        )}
+
+
                         <td>
                           <a href={`${config.BASE_URL}/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer">Bank Statement</a>
                         </td>
-                        <td>
+                        {/* <td>
                           <img
                             src={`${config.BASE_URL}/register/file/${v.id}/signature`}
                             alt="Signature"
                             style={{ width: "100px", height: "auto" }}
                           />
-                        </td>
+                        </td> */}
                         <td>
                           {v.status === "PENDING" && (
                             <button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
@@ -451,46 +496,68 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
           </div>
         </div>
 
-        <div className="row">
-          <div className="input-group">
-            <label>License Copy</label>
-            <a
-              href={`${config.BASE_URL}/register/file/${formInputs.userId}/license`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="file-link-box"
-            >
-              View License
-            </a>
-            <input
-              type="file"
-              name="licenseFile"
-              accept="application/pdf,image/*"
-              onChange={(e) => setFormInputs({ ...formInputs, licenseFile: e.target.files[0] })}
-              style={{ marginTop: "8px" }}
-            />
-          </div>
+        {["car", "motor-bike"].includes(formInputs.vehicleType?.toLowerCase()) ? (
+          <div className="row">
+            <div className="input-group">
+              <label>License Copy</label>
+              <a
+                href={`${config.BASE_URL}/register/file/${formInputs.userId}/license`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="file-link-box"
+              >
+                View License
+              </a>
+              <input
+                type="file"
+                name="licenseFile"
+                accept="application/pdf,image/*"
+                onChange={(e) => setFormInputs({ ...formInputs, licenseFile: e.target.files[0] })}
+                style={{ marginTop: "8px" }}
+              />
+            </div>
 
-          <div className="input-group">
-            <label>Passport</label>
-            <a
-              href={`${config.BASE_URL}/register/file/${formInputs.userId}/passport`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="file-link-box"
-            >
-              View Passport
-            </a>
-            <input
-              type="file"
-              name="passportFile"
-              accept="application/pdf,image/*"
-              onChange={(e) => setFormInputs({ ...formInputs, passportFile: e.target.files[0] })}
-              style={{ marginTop: "8px" }}
-            />
+            <div className="input-group">
+              <label>Passport</label>
+              <a
+                href={`${config.BASE_URL}/register/file/${formInputs.userId}/passport`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="file-link-box"
+              >
+                View Passport
+              </a>
+              <input
+                type="file"
+                name="passportFile"
+                accept="application/pdf,image/*"
+                onChange={(e) => setFormInputs({ ...formInputs, passportFile: e.target.files[0] })}
+                style={{ marginTop: "8px" }}
+              />
+            </div>
           </div>
-        </div>
-
+        ) : (
+          <div className="row">
+            <div className="input-group">
+              <label>Government Photo ID</label>
+              <a
+                href={`${config.BASE_URL}/register/file/${formInputs.userId}/photoid`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="file-link-box"
+              >
+                View Photo ID
+              </a>
+              <input
+                type="file"
+                name="photoIdFile"
+                accept="application/pdf,image/*"
+                onChange={(e) => setFormInputs({ ...formInputs, photoIdFile: e.target.files[0] })}
+                style={{ marginTop: "8px" }}
+              />
+            </div>
+          </div>
+        )}
         <div className="row">
           <div className="input-group">
             <label>Bank Statement</label>
