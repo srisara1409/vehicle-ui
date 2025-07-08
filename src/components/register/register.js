@@ -2,7 +2,6 @@ import { React, useState } from "react";
 import "bootstrap/dist/css/bootstrap.css";
 import { useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
-import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Link, useNavigate } from 'react-router-dom';
@@ -148,10 +147,10 @@ const Register = () => {
       if (!group.licenseNumber) newErrors.licenseNumber = 'Enter valid License Number';
       if (!group.licenseState) newErrors.licenseState = 'Enter License Obtained State';
       if (!group.licenseCountry) newErrors.licenseCountry = 'Enter License Obtained Country';
-      if (!group.licensePhoto) newErrors.licensePhoto = 'Enter License Photo';
-      if (!group.passportCopy) newErrors.passportCopy = 'Enter valid Passport Copy';
+      if (!group.licensePhoto) newErrors.licensePhoto = 'Attach a file less than 10MB';
+      if (!group.passportCopy) newErrors.passportCopy = 'Attach a file less than 10MB';
     }
-    if (option === 'ebike' && !group.photoIdCopy) newErrors.photoIdCopy = 'Enter valid PhotoID Copy';
+    if (option === 'ebike' && !group.photoIdCopy) newErrors.photoIdCopy = 'Attach a file less than 10MB';
     if (!group.addressLine1) newErrors.addressLine1 = 'Enter Address Line1';
     if (!group.city) newErrors.city = 'Enter valid City';
     if (!group.postalCode) newErrors.postalCode = 'Enter valid Postal Code';
@@ -180,32 +179,45 @@ const Register = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setSubmitted(true);  // Only enable error messages after first submit
+    setSubmitted(true); // Only enable error messages after first submit
     if (!validate()) return;
-    try {
 
+    try {
       const signature = sigCanvas.current
         ?.getCanvas()
         ?.toDataURL('image/png');
+
       const fullData = { ...group, vehicleType: option, signature };
       const formData = new FormData();
       formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
       if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
       if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
       if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
-      await axios.post(`${config.BASE_URL}/register`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+
+      const response = await fetch(`${config.BASE_URL}/register`, {
+        method: 'POST',
+        body: formData
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Server error:", errorText);
+        alert("Something went wrong. Please try again.");
+        return;
+      }
+
       alert('Vehicle registered. Awaiting admin approval.');
       setGroup(initialFormState);
       setOption("");
       sigCanvas.current.clear();
       navigate('/about');
+
     } catch (error) {
       console.error("Registration failed:", error);
       alert("Something went wrong. Please try again.");
     }
   };
+
   return (
     <div>
       <Form className="form" onSubmit={handleSubmit} onKeyDown={(e) => {
