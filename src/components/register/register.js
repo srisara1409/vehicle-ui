@@ -657,7 +657,7 @@ const Register = () => {
         <FormGroup>
           <center>
             <Button className="register-btn" type="submit">Register</Button>{' '}
-            <Button className="cancel-btn" tag={Link} to="/homepage">Cancel</Button>
+            <Button className="cancel-btn" tag={Link} to="/about">Cancel</Button>
           </center>
         </FormGroup>
 

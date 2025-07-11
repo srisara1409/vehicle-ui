@@ -19,6 +19,7 @@ const Navbar = () => {
 
         <div className="nav-menu">
           {isLoggedIn && <Link to="/homepage">Home</Link>}
+          {isLoggedIn && <Link to="/vehiclePage">Vehicle</Link>}
           <Link to="/about">About</Link>
           <Link to="/contact">Contact us</Link>
 		  <Link to="/register">Sign up / Register</Link>

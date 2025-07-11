@@ -328,7 +328,7 @@ export default function Homepage() {
 
                         {status === "Pending" && (
                           <>
-                            {["car", "motor-bike"].includes(v.vehicleType?.toLowerCase()) ? (
+                            {["car", "motorbike"].includes(v.vehicleType?.toLowerCase()) ? (
                               <>
                                 <td>
                                   <a href={`${config.BASE_URL}/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
@@ -551,7 +551,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
           </div>
         </div>
 
-        {["car", "motor-bike"].includes(formInputs.vehicleType?.toLowerCase()) ? (
+        {["car", "motorbike"].includes(formInputs.vehicleType?.toLowerCase()) ? (
           <div className="row">
             <div className="input-group">
               <label>License Copy</label>
