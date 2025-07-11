@@ -17,6 +17,7 @@ const Register = () => {
     dateOfBirth: '',
     mobileNumber: '',
     email: '',
+    vehicleType:'',
     licenseNumber: '',
     licenseState: '',
     licenseCountry: '',

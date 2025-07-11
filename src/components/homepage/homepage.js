@@ -17,6 +17,21 @@ export default function Homepage() {
 
   const navigate = useNavigate();
 
+  const safeFormat = (value) => {
+    try {
+      if (!value) return "N/A";
+
+      const date = value instanceof Date ? value : new Date(value);
+      if (isNaN(date)) throw new Error("Invalid date");
+
+      return format(date, "dd-MM-yyyy hh:mm aa");
+    } catch {
+      console.error("Failed to format:", value);
+      return "N/A";
+    }
+  };
+
+
   const [formInputs, setFormInputs] = useState({
     bondAmount: "",
     bondWeeks: "",
@@ -238,7 +253,6 @@ export default function Homepage() {
             Clear
           </button>
         </div>
-
         {["Pending", "Approved", "Closed"].map((status) => (
           <section key={status} style={{ marginTop: "30px" }}>
             <h2>{status} Requests</h2>
@@ -255,10 +269,19 @@ export default function Homepage() {
                       <th>DOB</th>
                       <th>Mobile</th>
                       <th>Email</th>
-                      <th>Vehicle Reg No</th>
+                      <th>Vehicle Type</th>
+                      {status !== "Pending" && <th>Vehicle Reg No</th>}
                       <th>License No</th>
-                      <th colSpan="2">ID Documents</th>
-                      <th>Bank Statement</th>
+                      {status !== "Pending" && <th>Start Date</th>}
+                      {status === "Approved" && <th>End Date</th>}
+                      {status === "Closed" && <th>End Date</th>}
+                      {status === "Pending" && (
+                        <>
+                          <th colSpan="2">ID Documents</th>
+                          <th>Bank Statement</th>
+                        </>
+                      )}
+
                       {/* <th>Signature</th> */}
                       <th>Actions</th>
                     </tr>
@@ -272,29 +295,60 @@ export default function Homepage() {
                         <td>{v.dateOfBirth}</td>
                         <td>{v.mobileNumber}</td>
                         <td>{v.email}</td>
-                        <td>{v.registrationNumber || (v.vehicles?.[0]?.registrationNumber || "N/A")}</td>
+                        <td>{v.vehicleType}</td>
+                        {status !== "Pending" && (
+                          <td>
+                            {v.vehicles?.[0]?.registrationNumber || "N/A"}
+                          </td>
+                        )}
                         <td>{v.licenseNumber}</td>
-                        {["car", "motor-bike"].includes(v.vehicleType?.toLowerCase()) ? (
+                        {status !== "Pending" && (
+                          <td>
+                            {v.vehicles?.[0]?.bondStartDate
+                              ? safeFormat(v.vehicles[0].bondStartDate)
+                              : "N/A"}
+                          </td>
+                        )}
+
+                        {status === "Approved" && (
+                          <td>
+                            {v.vehicles?.[0]?.bondEndDate
+                              ? safeFormat(v.vehicles[0].bondEndDate)
+                              : "Current User"}
+                          </td>
+                        )}
+
+                        {status === "Closed" && (
+                          <td>
+                            {v.vehicles?.[0]?.bondEndDate
+                              ? safeFormat(v.vehicles[0].bondEndDate)
+                              : "N/A"}
+                          </td>
+                        )}
+
+                        {status === "Pending" && (
                           <>
+                            {["car", "motor-bike"].includes(v.vehicleType?.toLowerCase()) ? (
+                              <>
+                                <td>
+                                  <a href={`${config.BASE_URL}/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
+                                </td>
+                                <td>
+                                  <a href={`${config.BASE_URL}/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
+                                </td>
+                              </>
+                            ) : (
+                              <td colSpan="2">
+                                <a href={`${config.BASE_URL}/register/file/${v.id}/photoid`} target="_blank" rel="noopener noreferrer">Photo ID</a>
+                              </td>
+                            )}
+
                             <td>
-                              <a href={`${config.BASE_URL}/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
-                            </td>
-                            <td>
-                              <a href={`${config.BASE_URL}/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td colSpan="2">
-                              <a href={`${config.BASE_URL}/register/file/${v.id}/photoid`} target="_blank" rel="noopener noreferrer">Photo ID</a>
+                              <a href={`${config.BASE_URL}/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer">Bank Statement</a>
                             </td>
                           </>
                         )}
 
-
-                        <td>
-                          <a href={`${config.BASE_URL}/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer">Bank Statement</a>
-                        </td>
                         {/* <td>
                           <img
                             src={`${config.BASE_URL}/register/file/${v.id}/signature`}
