@@ -61,6 +61,7 @@ export default function UpdateUserInfo() {
           {renderInput('lastName', 'Last Name', userInfo.lastName)}
           {renderInput('dateOfBirth', 'Date of Birth', userInfo.dateOfBirth)}
         </div>
+        
         <div className="form-row">
           {renderInput('email', 'Email', userInfo.email)}
           {renderInput('mobileNumber', 'Mobile Number', userInfo.mobileNumber)}
@@ -96,6 +97,9 @@ export default function UpdateUserInfo() {
         <div className="form-row">
           {renderInput('vehicleType', 'Vehicle Type', userInfo.vehicleType)}
           {renderInput('licenseNumber', 'License Number', userInfo.licenseNumber)}
+        </div>
+
+        <div className="form-row">
           {renderInput('licenseState', 'License State', userInfo.licenseState)}
           {renderInput('licenseCountry', 'License Country', userInfo.licenseCountry)}
         </div>
