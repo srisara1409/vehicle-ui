@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
+import axios from 'axios';
 
 import "react-datepicker/dist/react-datepicker.css";
 import "./homepage.css";
@@ -31,7 +32,6 @@ export default function Homepage() {
     }
   };
 
-
   const [formInputs, setFormInputs] = useState({
     bondAmount: "",
     bondWeeks: "",
@@ -54,34 +54,6 @@ export default function Homepage() {
       .then((data) => setVehicles(data))
       .catch((err) => console.error("Error fetching data:", err));
   }, []);
-
-  // 🔄 Auto-fill vehicle details by registration number (status = 'not sold')
-  useEffect(() => {
-    const fetchVehicleDetails = async () => {
-      if (formInputs.registrationNumber.trim().length >= 3) {
-        try {
-          const res = await fetch(`${config.BASE_URL}/vehicle/search?regNumber=${formInputs.registrationNumber.trim()}`);
-          if (res.ok) {
-            const data = await res.json();
-            setFormInputs((prev) => ({
-              ...prev,
-              make: data.make,
-              model: data.model,
-              year: data.year,
-              vehicleType: data.vehicleType
-            }));
-          } else {
-            console.log("No matching vehicle found or vehicle is sold.");
-          }
-        } catch (error) {
-          console.error("Error fetching vehicle by registration number:", error);
-        }
-      }
-    };
-
-    fetchVehicleDetails();
-  }, [formInputs.registrationNumber]);
-
 
   const handleApprove = (vehicle) => {
     setSelectedVehicle(vehicle);
@@ -270,7 +242,7 @@ export default function Homepage() {
                       <th>Mobile</th>
                       <th>Email</th>
                       <th>Vehicle Type</th>
-                      {status !== "Pending" && <th>Vehicle Reg No</th>}
+                      {status !== "Pending" && <th>Registration No</th>}
                       <th>License No</th>
                       {status !== "Pending" && <th>Start Date</th>}
                       {status === "Approved" && <th>End Date</th>}
@@ -362,8 +334,20 @@ export default function Homepage() {
                           )}
                           {v.status === "APPROVED" && !v.bondEndDate && (
                             <>
-                              <button className="action-btn btn-update" onClick={() => handleUpdate(v)}>Update</button>
-                              <button className="action-btn btn-transfer" onClick={handleTransfer}>Transfer</button>
+                              <button
+                                className="action-btn-group action-btn btn-user"
+                                onClick={() => navigate(`/updateUserInfo/${v.id}`)}
+                              >
+                                User Info
+                              </button>
+
+                              <button
+                                className="action-btn-group action-btn btn-vehicle"
+                                onClick={() => navigate(`/updatevehicleInfo/${v.id}`)}
+                              >
+                                Vehicle Info
+                              </button>
+                              <button className="action-btn-group action-btn btn-transfer" onClick={handleTransfer}>Transfer</button>
                             </>
                           )}
                           {v.status === "CLOSED" && <span>Closed</span>}
@@ -412,6 +396,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
   const [startTime, setStartTime] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [endTime, setEndTime] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
     if (startDate && startTime) {
@@ -507,18 +492,51 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
         </div>
 
         <div className="row">
-          <div className="input-group">
-            <label> Registration Number <span style={{ color: 'red' }}>*</span></label>
+
+          <div className="input-group" style={{ position: 'relative' }}>
+            <label>Registration Number <span style={{ color: 'red' }}>*</span></label>
             <input
               type="text"
               value={formInputs.registrationNumber || ""}
-              onChange={(e) => {
-                setFormInputs({ ...formInputs, registrationNumber: e.target.value });
-                if (setErrors) {
-                  setErrors((prev) => ({ ...prev, registrationNumber: "" }));
+              onChange={async (e) => {
+                const value = e.target.value;
+                setFormInputs({ ...formInputs, registrationNumber: value });
+                if (setErrors) setErrors((prev) => ({ ...prev, registrationNumber: "" }));
+
+                if (value.length === 3) {
+                  try {
+                    const response = await axios.get(`${config.BASE_URL}/vehicle/search?regNumber=${value}`);
+                    setSuggestions(response.data);
+                  } catch (err) {
+                    console.error("Vehicle search error", err);
+                  }
+                } else {
+                  setSuggestions([]);
                 }
               }}
             />
+            {suggestions.length > 0 && (
+              <ul className="suggestion-list" >
+                {suggestions.map((vehicle, idx) => (
+                  <li
+                    key={idx}
+                    onClick={() => {
+                      setFormInputs({
+                        ...formInputs,
+                        registrationNumber: vehicle.registrationNumber,
+                        make: vehicle.make,
+                        model: vehicle.model,
+                        year: vehicle.year,
+                        fuelType: vehicle.fuelType
+                      });
+                      setSuggestions([]);
+                    }}
+                  >
+                    {vehicle.registrationNumber} - {vehicle.make} {vehicle.model} ({vehicle.year})
+                  </li>
+                ))}
+              </ul>
+            )}
             {errors?.registrationNumber && (
               <span style={{ color: "red", fontSize: "0.8rem" }}>{errors.registrationNumber}</span>
             )}
