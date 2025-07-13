@@ -59,6 +59,22 @@ export default function VehiclePage() {
     }
   };
 
+  const handleStatusChange = (index, newStatus) => {
+    const updatedList = [...vehicleList];
+    updatedList[index].status = newStatus;
+    setVehicleList(updatedList);
+  };
+
+  const updateStatus = async (registrationNumber, status) => {
+    try {
+      await axios.put(`${config.BASE_URL}/vehicle/updateVehicleStatus/${registrationNumber}?status=${status}`);
+      setMessage("Status updated successfully.");
+    } catch (error) {
+      console.error("Error updating vehicle status:", error);
+      setMessage("Error updating status.");
+    }
+  };
+
   return (
     <div className="vehicle-container page-wrapper">
       <h2 style={{ fontSize: "28px", fontWeight: "600", color: "#111827", marginBottom: "30px" }}>Add New Vehicle</h2>
@@ -104,21 +120,31 @@ export default function VehiclePage() {
           </thead>
           <tbody>
             {vehicleList
-            .filter((v) =>
-            v.registrationNumber.toLowerCase().includes(searchText.toLowerCase())
-          )
-            
-            .map((v) => (
-              <tr key={v.id}>
-                <td>{v.registrationNumber}</td>
-                <td>{v.model}</td>
-                <td>{v.make}</td>
-                <td>{v.year}</td>
-                <td>{v.fuelType}</td>
-                <td>{v.vehicleType}</td>
-                <td>{v.status}</td>
-              </tr>
-            ))}
+              .filter((v) =>
+                !searchText || v.registrationNumber.toLowerCase().includes(searchText.toLowerCase())
+              )
+              .map((v, index) => (
+                <tr key={v.id || index}>
+                  <td>{v.registrationNumber}</td>
+                  <td>{v.model}</td>
+                  <td>{v.make}</td>
+                  <td>{v.year}</td>
+                  <td>{v.fuelType}</td>
+                  <td>{v.vehicleType}</td>
+                  <td>
+                    <select
+                      value={v.status}
+                      onChange={(e) => handleStatusChange(index, e.target.value)}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Sold">Sold</option>
+                    </select>
+                    <button onClick={() => updateStatus(v.registrationNumber, v.status)}>
+                      ✅
+                    </button>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
