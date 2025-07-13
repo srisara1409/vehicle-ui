@@ -359,7 +359,7 @@ const handleSubmit = async (event) => {
       console.error(`Axios Error ${status}:`, data);
     } else if (error.request) {
       // Request was made but no response (e.g., offline)
-      alert("Network error. Please check your internet connection.");
+      alert("OverAll uploaded File size too large, Please compress your file and each file must not exceed 10MB");
       console.error("No response received:", error.request);
     } else {
       // Something else caused the error
