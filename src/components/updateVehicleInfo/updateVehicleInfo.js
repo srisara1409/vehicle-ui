@@ -87,7 +87,7 @@ export default function UpdateVehicleInfo() {
         </div>
       ))}
 
-      <div className="back-button">
+      <div className="back-buttonv">
         <button onClick={() => navigate('/homepage')}>Back to Home</button>
       </div>
     </div>
