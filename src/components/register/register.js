@@ -8,6 +8,7 @@ import './registerPage.css';
 import countryList from 'react-select-country-list';
 import { Button, FormGroup, Form } from "reactstrap";
 import config from '../../config';
+import axios from 'axios';
 
 // added by Ragu from here
 // Helper: Compress image to JPEG under 10MB with adjusted dimensions
@@ -281,89 +282,94 @@ const Register = () => {
   //       ?.toDataURL('image/png');
   //const fullData = { ...group, signature };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setSubmitted(true); // Only enable error messages after first submit
 
-    if (!validate()) {
-      const firstErrorField = document.querySelector('.input-error');
-      if (firstErrorField) {
-        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
+
+const handleSubmit = async (event) => {
+  event.preventDefault();
+  setSubmitted(true);
+
+  if (!validate()) {
+    const firstErrorField = document.querySelector('.input-error');
+    if (firstErrorField) {
+      firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+    return;
+  }
 
-    try {
-      // ✅ Generate and validate signature
-      const canvas = sigCanvas.current?.getCanvas();
-      let signature = "";
+  try {
+    // Signature handling (same as before)
+    const canvas = sigCanvas.current?.getCanvas();
+    let signature = "";
 
-      if (canvas) {
-        const blob = await new Promise((resolve) =>
-          canvas.toBlob(resolve, "image/png", 0.8)
-        );
-
-        const file = new File([blob], "signature.png", {
-          type: "image/png",
-          lastModified: Date.now(),
-        });
-
-        if (file.size > 10 * 1024 * 1024) {
-          alert("Signature image is too large. Please sign again with a smaller one.");
-          return;
-        }
-
-        signature = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        });
-      }
-
-      // ✅ Prepare data
-      const fullData = { ...group, vehicleType: option, signature };
-      const formData = new FormData();
-      formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
-      if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
-      if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
-      if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
-
-      // ✅ Send request
-      const response = await fetch(`${config.BASE_URL}/register`, {
-        method: 'POST',
-        body: formData
+    if (canvas) {
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, "image/png", 0.8)
+      );
+      const file = new File([blob], "signature.png", {
+        type: "image/png",
+        lastModified: Date.now(),
       });
 
-      // ✅ Handle error responses
-      if (!response.ok) {
-        const errorText = await response.text();
-
-        if (response.status === 400) {
-          alert("Registration failed: Missing or invalid fields. Please check your input.");
-        } else if (response.status === 413) {
-          alert("File size/Type mismatching(Accepted type PDF, JPEG, JPG). Please upload files smaller than 10MB.");
-        } else if (response.status === 500) {
-          alert("Server error: Please try again later.");
-        } else {
-          alert("Please check the file Size/Type, input fields, Signature. And try again");
-        }
-
-        console.error(`Server error ${response.status}:`, errorText);
+      if (file.size > 10 * 1024 * 1024) {
+        alert("Signature image is too large. Please sign again with a smaller one.");
         return;
       }
 
-      // ✅ Success
-      alert('Vehicle registered successfully. Awaiting admin approval.');
-      setGroup(initialFormState);
-      setOption("");
-      sigCanvas.current.clear();
-      navigate('/about');
-
-    } catch (error) {
-      console.error("Network or unexpected error:", error);
-      alert("Network error. Please check your internet connection or try again later.");
+      signature = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
     }
-  };
+
+    const fullData = { ...group, vehicleType: option, signature };
+    const formData = new FormData();
+    formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
+    if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
+    if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
+    if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
+
+    const response = await axios.post(`${config.BASE_URL}/register`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      timeout: 30000 // Optional timeout
+    });
+
+    alert('Vehicle registered successfully. Awaiting admin approval.');
+    setGroup(initialFormState);
+    setOption("");
+    sigCanvas.current.clear();
+    navigate('/about');
+
+  } catch (error) {
+    if (error.response) {
+      const { status, data } = error.response;
+
+      if (status === 400) {
+        alert("Registration failed: Missing or invalid fields. Please check your input.");
+      } else if (status === 413) {
+        alert("File size/Type mismatching(Accepted type PDF, JPEG, JPG). Please upload files smaller than 10MB.");
+      } else if (status === 500) {
+        alert("Server error. Please try again later.");
+      } else {
+        alert("Please check the file Size/Type, input fields, Signature. And try again");
+      }
+
+      console.error(`Axios Error ${status}:`, data);
+    } else if (error.request) {
+      // Request was made but no response (e.g., offline)
+      alert("Network error. Please check your internet connection.");
+      console.error("No response received:", error.request);
+    } else {
+      // Something else caused the error
+      alert("Unexpected error. Please try again.");
+      console.error("Error", error.message);
+    }
+  }
+};
+
+
 
 
   return (
