@@ -15,6 +15,8 @@ export default function VehiclePage() {
   });
 
   const [message, setMessage] = useState('');
+  const [searchText, setSearchText] = useState('');
+
 
   const fetchVehicles = async () => {
     try {
@@ -58,46 +60,69 @@ export default function VehiclePage() {
   };
 
   return (
-    <div className="vehicle-container">
-      <h2>Add New Vehicle</h2>
+    <div className="vehicle-container page-wrapper">
+      <h2 style={{ fontSize: "28px", fontWeight: "600", color: "#111827", marginBottom: "30px" }}>Add New Vehicle</h2>
       {message && <p className="message">{message}</p>}
-      <form onSubmit={handleSubmit} className="vehicle-form">
+      <form onSubmit={handleSubmit} className="vehicle-form" autoComplete="off">
         <input type="text" name="registrationNumber" value={vehicle.registrationNumber} placeholder="Registration Number" onChange={handleChange} required />
         <input type="text" name="model" value={vehicle.model} placeholder="Model" onChange={handleChange} required />
         <input type="text" name="make" value={vehicle.make} placeholder="Make" onChange={handleChange} required />
         <input type="number" name="year" value={vehicle.year} placeholder="Year" onChange={handleChange} required />
         <input type="text" name="fuelType" value={vehicle.fuelType} placeholder="Fuel Type" onChange={handleChange} required />
         <input type="text" name="vehicleType" value={vehicle.vehicleType} placeholder="Vehicle Type" onChange={handleChange} required />
-        <button type="submit">Add Vehicle</button>
+        <button type="submit" className="add-button">Add Vehicle</button>
       </form>
 
-      <h2>Vehicle List</h2>
-      <table className="vehicle-table">
-        <thead>
-          <tr>
-            <th>Registration No</th>
-            <th>Model</th>
-            <th>Make</th>
-            <th>Year</th>
-            <th>Fuel Type</th>
-            <th>Type</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {vehicleList.map((v) => (
-            <tr key={v.id}>
-              <td>{v.registrationNumber}</td>
-              <td>{v.model}</td>
-              <td>{v.make}</td>
-              <td>{v.year}</td>
-              <td>{v.fuelType}</td>
-              <td>{v.vehicleType}</td>
-              <td>{v.status}</td>
+      {/* 🔍 Search Filter */}
+
+      <h2 style={{ fontSize: "24px", fontWeight: "600", color: "#111827", marginTop: "40px" }}>Vehicle List</h2>
+      <div className="search-filter-row">
+        <input
+          type="text"
+          placeholder="Search by Registration No"
+          className="search-input"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+        <button className="filter-btn"
+          onClick={() => setSearchText('')}>
+          Clear
+        </button>
+      </div>
+      <div className="table-wrapper">
+        <table className="vehicle-table">
+          <thead>
+            <tr>
+              <th>Registration No</th>
+              <th>Model</th>
+              <th>Make</th>
+              <th>Year</th>
+              <th>Fuel Type</th>
+              <th>Type</th>
+              <th>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {vehicleList
+            .filter((v) =>
+            v.registrationNumber.toLowerCase().includes(searchText.toLowerCase())
+          )
+            
+            .map((v) => (
+              <tr key={v.id}>
+                <td>{v.registrationNumber}</td>
+                <td>{v.model}</td>
+                <td>{v.make}</td>
+                <td>{v.year}</td>
+                <td>{v.fuelType}</td>
+                <td>{v.vehicleType}</td>
+                <td>{v.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
     </div>
   );
 }

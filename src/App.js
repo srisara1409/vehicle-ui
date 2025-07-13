@@ -7,6 +7,8 @@ import UpdatePage from './components/updatePage/updatePage'
 import Login from './components/login/login'
 import Register from './components/register/register'
 import VehiclePage from './components/vehiclePage/vehiclePage'
+import UpdateUserInfo from './components/updateUserInfo/updateUserInfo'
+import UpdateVehicleInfo from './components/updateVehicleInfo/updateVehicleInfo'
 import React from "react";
 import About from './components/about/about';
 import Contact from './components/contact/contact';
@@ -26,6 +28,8 @@ function App() {
                     <Route path="/homepage" element={<PrivateRoute><Home /></PrivateRoute>} />
                     <Route path="/update/:id" element={<PrivateRoute><UpdatePage /></PrivateRoute>} />
                     <Route path="/vehiclePage" element={<PrivateRoute><VehiclePage /></PrivateRoute>} />
+                    <Route path="/updateUserInfo/:id" element={<PrivateRoute><UpdateUserInfo /></PrivateRoute>} />
+                    <Route path="/updateVehicleInfo/:id" element={<PrivateRoute><UpdateVehicleInfo /></PrivateRoute>} />
                     <Route path="/login" element={< Login />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />

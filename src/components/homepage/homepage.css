@@ -89,11 +89,37 @@ h1, h2 {
   color: white;
 }
 
+.btn-transfer:hover{
+  background-color: #f59e0b;
+}
+
+.btn-user{
+  background-color: #4b5563;
+  color: white;
+}
+
+.btn-user:hover{
+  background-color: #374151;
+}
+
+.btn-vehicle{
+  background-color: #787c5b;
+  color: white;
+}
+
+.btn-vehicle:hover{
+  background-color: #5b5f3f;
+}
+
 .action-btn-group {
-  display: flex;
-  flex-direction: row;
-  gap: 6px;
-  flex-wrap: wrap;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 90px;
+  text-align: center;
 }
 
 /* =======================

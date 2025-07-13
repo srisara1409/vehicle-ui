@@ -177,6 +177,52 @@ html, body {
   z-index: 1001 !important;
 }
 
+/* Registration Vehicle Drop Down Menu */
+.suggestion-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: 100% !important; /* strictly matches input */
+  margin-top: -1px;
+  padding-right: calc(var(--bs-gutter-x) * 0.5);
+  padding-left: calc(var(--bs-gutter-x) * 0.5);
+  list-style: none;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 5px !important; /* rounded bottom */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 999;
+  max-height: 180px;
+  overflow-y: auto;
+  font-size: 0.95rem;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+.suggestion-list li {
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-top: 1px solid #eee;
+  border-left: none;
+  border-right: none;
+}
+
+.suggestion-list li:first-child {
+  border-top: none;
+  border-radius: 5px !important; /* optional */
+}
+
+.suggestion-list li:last-child {
+  border-radius: 5px !important; /* make last item corners rounded */
+}
+
+.suggestion-list li:hover {
+  background-color: #f9f9f9;
+}
+
 /* ========================
    Mobile Responsive Styles
 ======================== */

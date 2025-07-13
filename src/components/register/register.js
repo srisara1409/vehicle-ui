@@ -1,6 +1,5 @@
-import { React, useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.css";
-import { useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -10,6 +9,52 @@ import countryList from 'react-select-country-list';
 import { Button, FormGroup, Form } from "reactstrap";
 import config from '../../config';
 
+// added by Ragu from here
+// Helper: Compress image to JPEG under 10MB with adjusted dimensions
+export const compressImage = (file, maxSizeMB = 10, maxWidth = 1024) => {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      resolve(file); // Skip compression for non-images
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let scale = Math.min(maxWidth / img.width, 1); // prevent upscale
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.size / (1024 * 1024) <= maxSizeMB) {
+              const compressedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file); // fallback
+            }
+          },
+          "image/jpeg",
+          0.8
+        );
+      };
+      img.onerror = () => reject("Image loading failed");
+      img.src = event.target.result;
+    };
+    reader.onerror = () => reject("File reading failed");
+    reader.readAsDataURL(file);
+  });
+};
+// added by Ragu till here
+
 const Register = () => {
   const initialFormState = {
     firstName: '',
@@ -17,7 +62,7 @@ const Register = () => {
     dateOfBirth: '',
     mobileNumber: '',
     email: '',
-    vehicleType:'',
+    vehicleType: '',
     licenseNumber: '',
     licenseState: '',
     licenseCountry: '',
@@ -40,6 +85,17 @@ const Register = () => {
   };
 
   const sigCanvas = useRef(null);
+  useEffect(() => {
+    const canvasRef = sigCanvas.current;
+    if (!canvasRef) return;
+
+    const canvas = canvasRef.getCanvas();
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+  }, []);
+
   const [group, setGroup] = useState(initialFormState);
   const [option, setOption] = useState("");
   const [errors, setErrors] = useState({});
@@ -68,16 +124,42 @@ const Register = () => {
     }
     if (type === "checkbox") {
       setGroup({ ...group, [name]: checked });
-    } else if (type === "file") {
+    }
+    // added by Ragu from here to 
+    else if (type === "file") {
       const file = files[0];
       if (!file) return;
-      const isValidType = file.type.startsWith("image/") || file.type === "application/pdf";
-      const isValidSize = file.size <= 10 * 1024 * 1024;
-      if (!isValidType) alert("Only image files and PDFs are allowed.");
-      if (!isValidSize) alert("File must be less than 10MB.");
-      setGroup({ ...group, [name]: file });
-      setPreviews((prev) => ({ ...prev, [name]: URL.createObjectURL(file) }));
-    } else {
+      const isPDF = file.type === "application/pdf";
+      const isImage = file.type.startsWith("image/");
+      if (!isPDF && !isImage) {
+        alert("Only image files and PDFs are allowed.");
+        return;
+      }
+      const handleCompressed = (processedFile) => {
+        setGroup((prev) => ({ ...prev, [name]: processedFile }));
+        setPreviews((prev) => ({ ...prev, [name]: URL.createObjectURL(processedFile) }));
+        if (submitted && errors[name]) {
+          const newErrors = { ...errors };
+          delete newErrors[name];
+          setErrors(newErrors);
+        }
+      };
+      if (file.size <= 10 * 1024 * 1024) {
+        handleCompressed(file);
+      } else if (isImage) {
+        compressImage(file, 1024, 1024, 0.8).then((compressed) => {
+          if (compressed.size <= 10 * 1024 * 1024) {
+            handleCompressed(compressed);
+          } else {
+            alert("Compressed image is still too large. Please choose a smaller one.");
+          }
+        });
+      } else {
+        alert("File is too large. Please upload a file smaller than 10MB.");
+      }
+    } // added by Ragu till here
+
+    else {
       if ((name === "postalCode" || name === "bsbNumber" || name === "accountNumber") && !/^\d*$/.test(value)) return;
       if ((name === "licenseState" || name === "city" || name === "state" || name === "country" || name === "bankName" || name === "accountName") && !/^[a-zA-Z\s]*$/.test(value)) return;
       setGroup((prev) => {
@@ -181,12 +263,41 @@ const Register = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitted(true); // Only enable error messages after first submit
-    if (!validate()) return;
+    if (!validate()) {
+      const firstErrorField = document.querySelector('.input-error');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
 
-    try {
-      const signature = sigCanvas.current
-        ?.getCanvas()
-        ?.toDataURL('image/png');
+    try
+    // added by Ragu from here 
+    {
+      const canvas = sigCanvas.current?.getCanvas();
+      let signature = "";
+
+      if (canvas) {
+        const blob = await new Promise((resolve) =>
+          canvas.toBlob(resolve, "image/png", 0.8)
+        );
+        const file = new File([blob], "signature.png", {
+          type: "image/png",
+          lastModified: Date.now(),
+        });
+
+        if (file.size > 10 * 1024 * 1024) {
+          alert("Signature image is too large. Please sign again smaller.");
+          return;
+        }
+
+        signature = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        });
+      }
+      // added by Ragu till here
 
       const fullData = { ...group, vehicleType: option, signature };
       const formData = new FormData();
@@ -221,7 +332,7 @@ const Register = () => {
 
   return (
     <div>
-      <Form className="form" onSubmit={handleSubmit} onKeyDown={(e) => {
+      <Form className="form" onSubmit={handleSubmit} autoComplete="off" onKeyDown={(e) => {
         if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
           e.preventDefault();
         }
@@ -329,7 +440,14 @@ const Register = () => {
           <div className="tooltip-container" style={{ flex: 1 }}>
             <select
               value={option}
-              onChange={(e) => setOption(e.target.value)}
+              onChange={(e) => {
+                setOption(e.target.value);
+                if (submitted && errors.option) {
+                  const newErrors = { ...errors };
+                  delete newErrors.option;
+                  setErrors(newErrors);
+                }
+              }}
               className={`form__input ${submitted && errors.option ? 'input-error' : ''}`}>
               <option value="">-- Choose --</option>
               <option value="car">Car</option>
@@ -525,7 +643,7 @@ const Register = () => {
           <label className="form__label" htmlFor="addressLine2">Address Line 2</label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className="form__input" type="text" name="addressLine2" id="addressLine2"
-              value={group.addressLine2 || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your street address 2"
+              value={group.addressLine2 || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your street address 2" 
             />
           </div>
         </FormGroup>
@@ -573,7 +691,7 @@ const Register = () => {
         <FormGroup className="form-row">
           <label className="form__label" for="accountName">Name as per Bank<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${submitted && errors.accountName ? 'input-error' : ''}`} type="text" name="accountName" id="accountName" value={group.accountName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter account holder name" />
+            <input className={`form__input ${submitted && errors.accountName ? 'input-error' : ''}`} type="text" name="accountName" id="accountName" value={group.accountName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter account holder name"/>
             {submitted && errors.accountName && <div className="tooltip-message">{errors.accountName}</div>}
           </div>
         </FormGroup>
@@ -610,9 +728,9 @@ const Register = () => {
           </div>
         </FormGroup>
 
-        <FormGroup>
+        <FormGroup className="form-row">
           <label className="form__label">Signature<span style={{ color: 'red' }}>*</span></label>
-          <div className="signature-container tooltip-container">
+          <div className="signature-container tooltip-container" style={{ flex: 1 }}>
             <SignatureCanvas
               ref={sigCanvas}
               backgroundColor="#fff"
@@ -637,7 +755,7 @@ const Register = () => {
         </FormGroup>
 
         <FormGroup check>
-          <div className="tooltip-container">
+          <div className="terms-container">
             <input className="terms-checkbox" type="checkbox" id="test1" name="teamsAndConditions" onChange={handleChange} onBlur={handleBlur} checked={group.teamsAndConditions} />
             <label htmlFor="test1">
               I agree to these{' '}
@@ -655,7 +773,7 @@ const Register = () => {
         </FormGroup>
 
         <FormGroup>
-          <center>
+          <center className="button-row">
             <Button className="register-btn" type="submit">Register</Button>{' '}
             <Button className="cancel-btn" tag={Link} to="/about">Cancel</Button>
           </center>
