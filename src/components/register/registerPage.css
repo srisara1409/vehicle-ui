@@ -198,7 +198,6 @@ input[type="file"].file-upload {
     border-radius: 4px;
     background-color: white;
     font-size: 0.95rem;
-    width: 100px;
     box-sizing: border-box;
     color: #444;
     white-space: nowrap;

@@ -110,6 +110,7 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
+
     if (name === "licenseState") {
       if (australianStates.includes(value)) {
         setGroup((prev) => ({ ...prev, licenseState: value, licenseCountry: "Australia" }));
@@ -118,23 +119,33 @@ const Register = () => {
       } else {
         setGroup((prev) => ({ ...prev, licenseState: value }));
       }
+      return;
     }
+
     if (name === "licenseCountry") {
       setGroup((prev) => ({ ...prev, licenseCountry: value }));
+      return;
     }
+
     if (type === "checkbox") {
-      setGroup({ ...group, [name]: checked });
+      setGroup((prev) => ({ ...prev, [name]: checked }));
+      return;
     }
-    // added by Ragu from here to 
-    else if (type === "file") {
+
+    // ✅ Corrected File Upload Logic
+    if (type === "file") {
       const file = files[0];
       if (!file) return;
+
       const isPDF = file.type === "application/pdf";
       const isImage = file.type.startsWith("image/");
-      if (!isPDF && !isImage) {
-        alert("Only image files and PDFs are allowed.");
+      const isAccepted = isPDF || isImage;
+
+      if (!isAccepted) {
+        alert("Only image files (JPEG, PNG) and PDFs are allowed.");
         return;
       }
+
       const handleCompressed = (processedFile) => {
         setGroup((prev) => ({ ...prev, [name]: processedFile }));
         setPreviews((prev) => ({ ...prev, [name]: URL.createObjectURL(processedFile) }));
@@ -144,35 +155,45 @@ const Register = () => {
           setErrors(newErrors);
         }
       };
+
       if (file.size <= 10 * 1024 * 1024) {
         handleCompressed(file);
       } else if (isImage) {
-        compressImage(file, 1024, 1024, 0.8).then((compressed) => {
+        compressImage(file, 10, 1024).then((compressed) => {
           if (compressed.size <= 10 * 1024 * 1024) {
             handleCompressed(compressed);
           } else {
             alert("Compressed image is still too large. Please choose a smaller one.");
           }
+        }).catch(() => {
+          alert("Image compression failed. Please try a different image.");
         });
       } else {
-        alert("File is too large. Please upload a file smaller than 10MB.");
+        alert("PDF file is too large. Please upload one smaller than 10MB.");
       }
-    } // added by Ragu till here
-
-    else {
-      if ((name === "postalCode" || name === "bsbNumber" || name === "accountNumber") && !/^\d*$/.test(value)) return;
-      if ((name === "licenseState" || name === "city" || name === "state" || name === "country" || name === "bankName" || name === "accountName") && !/^[a-zA-Z\s]*$/.test(value)) return;
-      setGroup((prev) => {
-        const updated = { ...prev, [name]: value };
-        if (submitted && errors[name]) {
-          const newErrors = { ...errors };
-          delete newErrors[name];
-          setErrors(newErrors);
-        }
-        return updated;
-      });
+      return;
     }
+
+    // ✅ Text/numeric field validation
+    if (
+      (["postalCode", "bsbNumber", "accountNumber"].includes(name) && !/^\d*$/.test(value)) ||
+      (["licenseState", "city", "state", "country", "bankName", "accountName"].includes(name) && !/^[a-zA-Z\s]*$/.test(value))
+    ) {
+      return;
+    }
+
+    // ✅ Default field update
+    setGroup((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (submitted && errors[name]) {
+        const newErrors = { ...errors };
+        delete newErrors[name];
+        setErrors(newErrors);
+      }
+      return updated;
+    });
   };
+
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
@@ -263,6 +284,7 @@ const Register = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitted(true); // Only enable error messages after first submit
+
     if (!validate()) {
       const firstErrorField = document.querySelector('.input-error');
       if (firstErrorField) {
@@ -271,9 +293,8 @@ const Register = () => {
       return;
     }
 
-    try
-    // added by Ragu from here 
-    {
+    try {
+      // ✅ Generate and validate signature
       const canvas = sigCanvas.current?.getCanvas();
       let signature = "";
 
@@ -281,13 +302,14 @@ const Register = () => {
         const blob = await new Promise((resolve) =>
           canvas.toBlob(resolve, "image/png", 0.8)
         );
+
         const file = new File([blob], "signature.png", {
           type: "image/png",
           lastModified: Date.now(),
         });
 
         if (file.size > 10 * 1024 * 1024) {
-          alert("Signature image is too large. Please sign again smaller.");
+          alert("Signature image is too large. Please sign again with a smaller one.");
           return;
         }
 
@@ -297,8 +319,8 @@ const Register = () => {
           reader.readAsDataURL(file);
         });
       }
-      // added by Ragu till here
 
+      // ✅ Prepare data
       const fullData = { ...group, vehicleType: option, signature };
       const formData = new FormData();
       formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
@@ -306,29 +328,43 @@ const Register = () => {
       if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
       if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
 
+      // ✅ Send request
       const response = await fetch(`${config.BASE_URL}/register`, {
         method: 'POST',
         body: formData
       });
 
+      // ✅ Handle error responses
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Server error:", errorText);
-        alert("Something went wrong. Please try again.");
+
+        if (response.status === 400) {
+          alert("Registration failed: Missing or invalid fields. Please check your input.");
+        } else if (response.status === 413) {
+          alert("File size/Type mismatching(Accepted type PDF, JPEG, JPG). Please upload files smaller than 10MB.");
+        } else if (response.status === 500) {
+          alert("Server error: Please try again later.");
+        } else {
+          alert("Please check the file Size/Type, input fields, Signature. And try again");
+        }
+
+        console.error(`Server error ${response.status}:`, errorText);
         return;
       }
 
-      alert('Vehicle registered. Awaiting admin approval.');
+      // ✅ Success
+      alert('Vehicle registered successfully. Awaiting admin approval.');
       setGroup(initialFormState);
       setOption("");
       sigCanvas.current.clear();
       navigate('/about');
 
     } catch (error) {
-      console.error("Registration failed:", error);
-      alert("Something went wrong. Please try again.");
+      console.error("Network or unexpected error:", error);
+      alert("Network error. Please check your internet connection or try again later.");
     }
   };
+
 
   return (
     <div>
@@ -643,7 +679,7 @@ const Register = () => {
           <label className="form__label" htmlFor="addressLine2">Address Line 2</label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className="form__input" type="text" name="addressLine2" id="addressLine2"
-              value={group.addressLine2 || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your street address 2" 
+              value={group.addressLine2 || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your street address 2"
             />
           </div>
         </FormGroup>
@@ -691,7 +727,7 @@ const Register = () => {
         <FormGroup className="form-row">
           <label className="form__label" for="accountName">Name as per Bank<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
-            <input className={`form__input ${submitted && errors.accountName ? 'input-error' : ''}`} type="text" name="accountName" id="accountName" value={group.accountName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter account holder name"/>
+            <input className={`form__input ${submitted && errors.accountName ? 'input-error' : ''}`} type="text" name="accountName" id="accountName" value={group.accountName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter account holder name" />
             {submitted && errors.accountName && <div className="tooltip-message">{errors.accountName}</div>}
           </div>
         </FormGroup>
