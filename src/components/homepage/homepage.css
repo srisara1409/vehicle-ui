@@ -76,17 +76,26 @@ h1, h2 {
 .btn-approve {
   background-color: #10b981;
   color: white;
+  margin: 5px;
+}
+
+.btn-delete {
+  background-color: #f52626;
+  color: white;
+  margin:5px;
 }
 
 .btn-update {
   background-color: #3b82f6;
   color: white;
   margin-right: 4px;
+  margin:5px;
 }
 
 .btn-transfer {
   background-color: #f59e0b;
   color: white;
+  margin:5px;
 }
 
 .btn-transfer:hover{
@@ -96,6 +105,7 @@ h1, h2 {
 .btn-user{
   background-color: #4b5563;
   color: white;
+  margin:5px;
 }
 
 .btn-user:hover{
@@ -105,6 +115,7 @@ h1, h2 {
 .btn-vehicle{
   background-color: #787c5b;
   color: white;
+  margin:5px;
 }
 
 .btn-vehicle:hover{

@@ -274,15 +274,7 @@ const Register = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  //  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  //const signature = sigCanvas.current.tr getTrimmedCanvas().toDataURL('image/png');
-  //  const signature = sigCanvas.current
-  //       ?.getTrimmedCanvas()
-  //       ?.toDataURL('image/png');
-  //const fullData = { ...group, signature };
-
-
+  
 
 const handleSubmit = async (event) => {
   event.preventDefault();
@@ -297,43 +289,71 @@ const handleSubmit = async (event) => {
   }
 
   try {
-    // Signature handling (same as before)
-    const canvas = sigCanvas.current?.getCanvas();
-    let signature = "";
 
-    if (canvas) {
-      const blob = await new Promise((resolve) =>
-        canvas.toBlob(resolve, "image/png", 0.8)
-      );
-      const file = new File([blob], "signature.png", {
-        type: "image/png",
-        lastModified: Date.now(),
-      });
-
-      if (file.size > 10 * 1024 * 1024) {
-        alert("Signature image is too large. Please sign again with a smaller one.");
-        return;
+    const getSignatureBlob = (dataURL) => {
+      const byteString = atob(dataURL.split(',')[1]);
+      const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
+    
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
       }
+    
+      return new Blob([ab], { type: mimeString });
+    };
+    const signatureCanvas = sigCanvas.current?.getCanvas()?.toDataURL('image/png');
 
-      signature = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(file);
-      });
-    }
+    const signatureBlob = getSignatureBlob(signatureCanvas);
+    const signatureFile = new File([signatureBlob], 'signature.png', { type: 'image/png' });
 
-    const fullData = { ...group, vehicleType: option, signature };
+
+    // ✅ Get trimmed canvas and convert it to Blob
+    // const blob = await new Promise((resolve) =>
+    //   signatureCanvas.toBlob(resolve, 'image/png')
+    // );
+    
+    // ✅ Create a File from the Blob
+    // const signatureFile = new File([blob], "signature.png", {
+    //   type: "image/png",
+    //   lastModified: Date.now(),
+    // });
+    // Signature handling (same as before)
+    // const canvas = sigCanvas.current?.getCanvas();
+    // let signature = "";
+
+    // if (canvas) {
+    //   const blob = await new Promise((resolve) =>
+    //     canvas.toBlob(resolve, "image/png", 0.8)
+    //   );
+    //   const file = new File([blob], "signature.png", {
+    //     type: "image/png",
+    //     lastModified: Date.now(),
+    //   });
+
+    //   if (file.size > 10 * 1024 * 1024) {
+    //     alert("Signature image is too large. Please sign again with a smaller one.");
+    //     return;
+    //   }
+
+    //   signature = await new Promise((resolve) => {
+    //     const reader = new FileReader();
+    //     reader.onloadend = () => resolve(reader.result);
+    //     reader.readAsDataURL(file);
+    //   });
+    // }
+
+    const fullData = { ...group, vehicleType: option };
     const formData = new FormData();
     formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
     if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
     if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
     if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
 
-    const response = await axios.post(`${config.BASE_URL}/register`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      timeout: 30000 // Optional timeout
+    formData.append('signatureFile', signatureFile);
+
+    await axios.post(`${config.BASE_URL}/register`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
 
     alert('Vehicle registered successfully. Awaiting admin approval.');
@@ -804,7 +824,7 @@ const handleSubmit = async (event) => {
               <button
                 type="button"
                 onClick={() => setShowTermsModal(true)}
-                style={{ background: 'none', border: 'none', padding: 0, color: '#007bff', textDecoration: 'underline', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', padding: 0, color: '#007bff', fontSize: '14px',textDecoration: 'underline', cursor: 'pointer' }}
               >
                 Terms and Conditions
               </button>
