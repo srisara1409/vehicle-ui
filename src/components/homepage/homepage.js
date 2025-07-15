@@ -55,6 +55,28 @@ export default function Homepage() {
       .catch((err) => console.error("Error fetching data:", err));
   }, []);
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
+  
+    try {
+      const response = await fetch(`${config.BASE_URL}/register/delete/${id}`, {
+        method: 'DELETE'
+      });
+  
+      if (response.ok) {
+        alert("Record deleted successfully.");
+        // Refresh or filter the list
+        setVehicles(prev => prev.filter(v => v.id !== id));
+      } else {
+        const error = await response.text();
+        alert("Failed to delete: " + error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error occurred while deleting.");
+    }
+  };
+
   const handleApprove = (vehicle) => {
     setSelectedVehicle(vehicle);
     setFormInputs({
@@ -330,7 +352,8 @@ export default function Homepage() {
                         </td> */}
                         <td>
                           {v.status === "PENDING" && (
-                            <button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
+                            <><button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
+                            <button className="action-btn btn-delete" onClick={() => handleDelete(v.id)}>Delete</button></>
                           )}
                           {v.status === "APPROVED" && !v.bondEndDate && (
                             <>

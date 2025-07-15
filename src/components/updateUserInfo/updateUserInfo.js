@@ -11,7 +11,7 @@ export default function UpdateUserInfo() {
   const [userInfo, setUserInfo] = useState({
     firstName: '', lastName: '', dateOfBirth: '', email: '', mobileNumber: '',
     emergencyContactName: '', emergencyContactNumber: '',
-    addressLine: '', addressLine2: '', city: '', state: '', postalCode: '', country: '', bankName: '',
+    addressLine1: '', addressLine2: '', city: '', state: '', postalCode: '', country: '', bankName: '',
     accountName: '', bsbNumber: '', accountNumber: '', vehicleType: '', licenseNumber: '', licenseState: '', licenseCountry: ''
   });
 
@@ -73,7 +73,7 @@ export default function UpdateUserInfo() {
 
         <h2>Address</h2>
         <div className="form-row">
-          {renderInput('addressLine', 'Address Line 1', userInfo.addressLine)}
+          {renderInput('addressLine1', 'Address Line 1', userInfo.addressLine1)}
           {renderInput('addressLine2', 'Address Line 2', userInfo.addressLine2)}
           {renderInput('city', 'City', userInfo.city)}
         </div>
