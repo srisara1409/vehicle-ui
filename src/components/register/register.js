@@ -349,19 +349,19 @@ const handleSubmit = async (event) => {
 
     const fullData = { ...group, vehicleType: option };
     const formData = new FormData();
-    formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
-   // formData.append('formData', JSON.stringify(fullData));
+    //formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
+   formData.append('formData', JSON.stringify(fullData));
     if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
     if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
     if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
 
     formData.append('signatureFile', signatureFile);
 
-   //await axios.post(`${config.BASE_URL}/register`, formData);
+   await axios.post(`${config.BASE_URL}/register`, formData);
 
-    await axios.post(`${config.BASE_URL}/register`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    // await axios.post(`${config.BASE_URL}/register`, formData, {
+    //   headers: { 'Content-Type': 'multipart/form-data' }
+    // });
 
     alert('Vehicle registered successfully. Awaiting admin approval.');
     setGroup(initialFormState);
