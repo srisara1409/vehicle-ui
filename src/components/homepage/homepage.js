@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
-import { format } from "date-fns";
+import { parse, format, isValid } from 'date-fns';
 import axios from 'axios';
-
 import "react-datepicker/dist/react-datepicker.css";
 import "./homepage.css";
 import "./approvePage.css";
@@ -21,12 +20,21 @@ export default function Homepage() {
   const safeFormat = (value) => {
     try {
       if (!value) return "N/A";
-
-      const date = value instanceof Date ? value : new Date(value);
-      if (isNaN(date)) throw new Error("Invalid date");
-
+  
+      let date;
+  
+      if (value instanceof Date) {
+        date = value;
+      } else if (typeof value === 'string') {
+        date = parse(value, "dd-MM-yyyy hh:mm aa", new Date());
+      } else {
+        return "N/A";
+      }
+  
+      if (!isValid(date)) throw new Error("Invalid date");
+  
       return format(date, "dd-MM-yyyy hh:mm aa");
-    } catch {
+    } catch (err) {
       console.error("Failed to format:", value);
       return "N/A";
     }
