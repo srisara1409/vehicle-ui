@@ -302,11 +302,11 @@ const handleSubmit = async (event) => {
     
       return new Blob([ab], { type: mimeString });
     };
-    const signatureCanvas = sigCanvas.current?.getCanvas()?.toDataURL('image/png');
 
+    const signatureCanvas = sigCanvas.current?.getCanvas()?.toDataURL('image/png');
     const signatureBlob = getSignatureBlob(signatureCanvas);
     const signatureFile = new File([signatureBlob], 'signature.png', { type: 'image/png' });
-
+    console.log("Signature size (MB):", (signatureFile.size / 1024 / 1024).toFixed(2));
 
     // ✅ Get trimmed canvas and convert it to Blob
     // const blob = await new Promise((resolve) =>
@@ -346,11 +346,14 @@ const handleSubmit = async (event) => {
     const fullData = { ...group, vehicleType: option };
     const formData = new FormData();
     formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
+   // formData.append('formData', JSON.stringify(fullData));
     if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
     if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
     if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
 
     formData.append('signatureFile', signatureFile);
+
+   //await axios.post(`${config.BASE_URL}/register`, formData);
 
     await axios.post(`${config.BASE_URL}/register`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -385,6 +388,7 @@ const handleSubmit = async (event) => {
       // Something else caused the error
       alert("Unexpected error. Please try again.");
       console.error("Error", error.message);
+      console.error("Safari/iOS error details:", error);
     }
   }
 };
@@ -402,7 +406,7 @@ const handleSubmit = async (event) => {
         <center><p>Register your Details</p></center>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="firstName">First Name<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="firstName">First Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.firstName ? 'input-error' : ''}`} type="text" name="firstName" id="firstName" value={group.firstName} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your first name" />
             {submitted && errors.firstName && <div className="tooltip-message">{errors.firstName}</div>}
@@ -410,7 +414,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="lastName">Last Name<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="lastName">Last Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.lastName ? 'input-error' : ''}`} type="text" name="lastName" id="lastName" value={group.lastName} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your last name" />
             {submitted && errors.lastName && <div className="tooltip-message">{errors.lastName}</div>}
@@ -418,7 +422,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="dateOfBirth">Date of Birth<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="dateOfBirth">Date of Birth<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <DatePicker
               className={`form__input ${submitted && errors.dateOfBirth ? 'input-error' : ''}`}
@@ -482,7 +486,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="mobileNumber">Mobile Number<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="mobileNumber">Mobile Number<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.mobileNumber ? 'input-error' : ''}`} type="text" name="mobileNumber" id="mobileNumber" value={group.mobileNumber} maxLength="12" onChange={handleChange} onBlur={handleBlur} placeholder="Enter your mobile number" />
             {submitted && errors.mobileNumber && <div className="tooltip-message">{errors.mobileNumber}</div>}
@@ -490,7 +494,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="email">Email ID<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="email">Email ID<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.email ? 'input-error' : ''}`} type="text" name="email" id="email" value={group.email} onChange={handleChange} onBlur={handleBlur} placeholder="xyz@company.com" />
             {submitted && errors.email && <div className="tooltip-message">{errors.email}</div>}
@@ -523,7 +527,7 @@ const handleSubmit = async (event) => {
         {(option === "car" || option === "motorbike") && (
           <div className="mt-4">
             <FormGroup className="form-row">
-              <label className="form__label" for="licenseNumber">License Number<span style={{ color: 'red' }}>*</span></label>
+              <label className="form__label" htmlFor="licenseNumber">License Number<span style={{ color: 'red' }}>*</span></label>
               <div className="tooltip-container" style={{ flex: 1 }}>
                 <input
                   type="text"
@@ -541,7 +545,7 @@ const handleSubmit = async (event) => {
             </FormGroup>
 
             <FormGroup className="form-row">
-              <label className="form__label" for="licenseState">License State<span style={{ color: 'red' }}>*</span></label>
+              <label className="form__label" htmlFor="licenseState">License State<span style={{ color: 'red' }}>*</span></label>
               <div className="tooltip-container" style={{ flex: 1 }}>
                 <select
                   className={`form__input ${submitted && errors.licenseState ? 'input-error' : ''}`}
@@ -595,7 +599,7 @@ const handleSubmit = async (event) => {
             </FormGroup>
 
             <FormGroup className="form-row">
-              <label className="form__label" for="licensePhoto">Upload License<span style={{ color: 'red' }}>*</span></label>
+              <label className="form__label" htmlFor="licensePhoto">Upload License<span style={{ color: 'red' }}>*</span></label>
               <div className="tooltip-container" style={{ flex: 1 }}>
                 <div className="file-upload-wrapper">
                   <input
@@ -626,7 +630,7 @@ const handleSubmit = async (event) => {
             </FormGroup>
 
             <FormGroup className="form-row">
-              <label className="form__label" for="passportCopy">Upload Passport<span style={{ color: 'red' }}>*</span></label>
+              <label className="form__label" htmlFor="passportCopy">Upload Passport<span style={{ color: 'red' }}>*</span></label>
               <div className="tooltip-container" style={{ flex: 1 }}>
                 <div className="file-upload-wrapper">
                   <input
@@ -662,7 +666,7 @@ const handleSubmit = async (event) => {
           <div className="mt-4">
 
             <FormGroup className="form-row">
-              <label className="form__label" for="photoIdCopy">Upload Any Government Issued Photo ID<span style={{ color: 'red' }}>*</span></label>
+              <label className="form__label" htmlFor="photoIdCopy">Upload Any Government Issued Photo ID<span style={{ color: 'red' }}>*</span></label>
               <div className="tooltip-container" style={{ flex: 1 }}>
                 <div className="file-upload-wrapper">
                   <input
@@ -694,7 +698,7 @@ const handleSubmit = async (event) => {
         )}
 
         <FormGroup className="form-row">
-          <label className="form__label" for="addressLine1">Address Line 1<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="addressLine1">Address Line 1<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.addressLine1 ? 'input-error' : ''}`} type="text" name="addressLine1" id="addressLine1" value={group.addressLine1} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your street address 1" />
             {submitted && errors.addressLine1 && <div className="tooltip-message">{errors.addressLine1}</div>}
@@ -711,7 +715,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="city">City<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="city">City<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.city ? 'input-error' : ''}`} type="text" name="city" id="city" value={group.city} onChange={handleChange} onBlur={handleBlur} placeholder="Enter city" />
             {submitted && errors.city && <div className="tooltip-message">{errors.city}</div>}
@@ -719,7 +723,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="state">State<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="state">State<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.state ? 'input-error' : ''}`} type="text" name="state" id="state" value={group.state} onChange={handleChange} onBlur={handleBlur} placeholder="Enter state" />
             {submitted && errors.state && <div className="tooltip-message">{errors.state}</div>}
@@ -727,7 +731,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="postalCode">Postal Code<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="postalCode">Postal Code<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.postalCode ? 'input-error' : ''}`} type="text" name="postalCode" id="postalCode" value={group.postalCode} maxLength="4" onChange={handleChange} onBlur={handleBlur} placeholder="Enter postal code" />
             {submitted && errors.postalCode && <div className="tooltip-message">{errors.postalCode}</div>}
@@ -735,7 +739,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="country">Country<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="country">Country<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.country ? 'input-error' : ''}`} type="text" name="country" id="country" value={group.country || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter your country" />
             {submitted && errors.country && <div className="tooltip-message">{errors.country}</div>}
@@ -743,7 +747,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="bankName">Bank Name<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="bankName">Bank Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.bankName ? 'input-error' : ''}`} type="text" name="bankName" id="bankName" value={group.bankName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter Bank name" />
             {submitted && errors.bankName && <div className="tooltip-message">{errors.bankName}</div>}
@@ -751,7 +755,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="accountName">Name as per Bank<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="accountName">Name as per Bank<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.accountName ? 'input-error' : ''}`} type="text" name="accountName" id="accountName" value={group.accountName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter account holder name" />
             {submitted && errors.accountName && <div className="tooltip-message">{errors.accountName}</div>}
@@ -759,7 +763,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="bsbNumber">BSB No.<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="bsbNumber">BSB No.<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.bsbNumber ? 'input-error' : ''}`} type="text" name="bsbNumber" id="bsbNumber" value={group.bsbNumber || ''} maxLength="6" onChange={handleChange} onBlur={handleBlur} placeholder="Enter 6-digit BSB" />
             {submitted && errors.bsbNumber && <div className="tooltip-message">{errors.bsbNumber}</div>}
@@ -767,7 +771,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="accountNumber">Account Number<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="accountNumber">Account Number<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.accountNumber ? 'input-error' : ''}`} type="text" name="accountNumber" id="accountNumber" value={group.accountNumber || ''} maxLength="12" onChange={handleChange} onBlur={handleBlur} placeholder="Enter 6–12 digit account number" />
             {submitted && errors.accountNumber && <div className="tooltip-message">{errors.accountNumber}</div>}
@@ -775,7 +779,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="emergencyContactName">Emergency Contact Name<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="emergencyContactName">Emergency Contact Name<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.emergencyContactName ? 'input-error' : ''}`} type="text" name="emergencyContactName" id="emergencyContactName" value={group.emergencyContactName || ''} onChange={handleChange} onBlur={handleBlur} placeholder="Enter emergency contact name" />
             {submitted && errors.emergencyContactName && <div className="tooltip-message">{errors.emergencyContactName}</div>}
@@ -783,7 +787,7 @@ const handleSubmit = async (event) => {
         </FormGroup>
 
         <FormGroup className="form-row">
-          <label className="form__label" for="emergencyContactNumber">Emergency Contact No.<span style={{ color: 'red' }}>*</span></label>
+          <label className="form__label" htmlFor="emergencyContactNumber">Emergency Contact No.<span style={{ color: 'red' }}>*</span></label>
           <div className="tooltip-container" style={{ flex: 1 }}>
             <input className={`form__input ${submitted && errors.emergencyContactNumber ? 'input-error' : ''}`} type="text" name="emergencyContactNumber" id="emergencyContactNumber" value={group.emergencyContactNumber || ''} maxLength="12" onChange={handleChange} onBlur={handleBlur} placeholder="Enter emergency contact number" />
             {submitted && errors.emergencyContactNumber && <div className="tooltip-message">{errors.emergencyContactNumber}</div>}
