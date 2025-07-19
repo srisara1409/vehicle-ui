@@ -65,6 +65,7 @@ const Login = () => {
             onChange={handleChange}
             placeholder="Enter your email"
             required
+            autoComplete="off"
           />
 
           <label htmlFor="password">PASSWORD</label>
