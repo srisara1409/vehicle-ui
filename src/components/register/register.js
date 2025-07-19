@@ -274,128 +274,153 @@ const Register = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0 && !isSignatureEmpty;
   };
-  
 
-const handleSubmit = async (event) => {
-  event.preventDefault();
-  setSubmitted(true);
 
-  if (!validate()) {
-    const firstErrorField = document.querySelector('.input-error');
-    if (firstErrorField) {
-      firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    return;
-  }
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitted(true);
 
-  if (sigCanvas.current.isEmpty()) {
-    document.querySelector('.sigCanvas').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
-  try {
-
-    const getSignatureBlob = (dataURL) => {
-      const byteString = atob(dataURL.split(',')[1]);
-      const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
-    
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
+    if (!validate()) {
+      const firstErrorField = document.querySelector('.input-error');
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-    
-      return new Blob([ab], { type: mimeString });
-    };
+      return;
+    }
 
-    const signatureCanvas = sigCanvas.current?.getCanvas()?.toDataURL('image/png');
-    const signatureBlob = getSignatureBlob(signatureCanvas);
-    const signatureFile = new File([signatureBlob], 'signature.png', { type: 'image/png' });
-    console.log("Signature size (MB):", (signatureFile.size / 1024 / 1024).toFixed(2));
+    if (sigCanvas.current.isEmpty()) {
+      document.querySelector('.sigCanvas').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-    // ✅ Get trimmed canvas and convert it to Blob
-    // const blob = await new Promise((resolve) =>
-    //   signatureCanvas.toBlob(resolve, 'image/png')
-    // );
-    
-    // ✅ Create a File from the Blob
-    // const signatureFile = new File([blob], "signature.png", {
-    //   type: "image/png",
-    //   lastModified: Date.now(),
-    // });
-    // Signature handling (same as before)
-    // const canvas = sigCanvas.current?.getCanvas();
-    // let signature = "";
+    try {
 
-    // if (canvas) {
-    //   const blob = await new Promise((resolve) =>
-    //     canvas.toBlob(resolve, "image/png", 0.8)
-    //   );
-    //   const file = new File([blob], "signature.png", {
-    //     type: "image/png",
-    //     lastModified: Date.now(),
-    //   });
+      const getSignatureBlob = (dataURL) => {
+        const byteString = atob(dataURL.split(',')[1]);
+        const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0];
 
-    //   if (file.size > 10 * 1024 * 1024) {
-    //     alert("Signature image is too large. Please sign again with a smaller one.");
-    //     return;
-    //   }
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
 
-    //   signature = await new Promise((resolve) => {
-    //     const reader = new FileReader();
-    //     reader.onloadend = () => resolve(reader.result);
-    //     reader.readAsDataURL(file);
-    //   });
-    // }
+        return new Blob([ab], { type: mimeString });
+      };
 
-    const fullData = { ...group, vehicleType: option };
-    const formData = new FormData();
-    //formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
-   formData.append('formData', JSON.stringify(fullData));
-    if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
-    if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
-    if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
+      const signatureCanvas = sigCanvas.current?.getCanvas()?.toDataURL('image/png');
+      const signatureBlob = getSignatureBlob(signatureCanvas);
+      const signatureFile = new File([signatureBlob], 'signature.png', { type: 'image/png' });
+      console.log("Signature size (MB):", (signatureFile.size / 1024 / 1024).toFixed(2));
 
-    formData.append('signatureFile', signatureFile);
+      // ✅ Get trimmed canvas and convert it to Blob
+      // const blob = await new Promise((resolve) =>
+      //   signatureCanvas.toBlob(resolve, 'image/png')
+      // );
 
-   await axios.post(`${config.BASE_URL}/register`, formData);
+      // ✅ Create a File from the Blob
+      // const signatureFile = new File([blob], "signature.png", {
+      //   type: "image/png",
+      //   lastModified: Date.now(),
+      // });
+      // Signature handling (same as before)
+      // const canvas = sigCanvas.current?.getCanvas();
+      // let signature = "";
 
-    // await axios.post(`${config.BASE_URL}/register`, formData, {
-    //   headers: { 'Content-Type': 'multipart/form-data' }
-    // });
+      // if (canvas) {
+      //   const blob = await new Promise((resolve) =>
+      //     canvas.toBlob(resolve, "image/png", 0.8)
+      //   );
+      //   const file = new File([blob], "signature.png", {
+      //     type: "image/png",
+      //     lastModified: Date.now(),
+      //   });
 
-    alert('Vehicle registered successfully. Awaiting admin approval.');
-    setGroup(initialFormState);
-    setOption("");
-    sigCanvas.current.clear();
-    navigate('/about');
+      //   if (file.size > 10 * 1024 * 1024) {
+      //     alert("Signature image is too large. Please sign again with a smaller one.");
+      //     return;
+      //   }
 
-  } catch (error) {
-    if (error.response) {
-      const { status, data } = error.response;
+      //   signature = await new Promise((resolve) => {
+      //     const reader = new FileReader();
+      //     reader.onloadend = () => resolve(reader.result);
+      //     reader.readAsDataURL(file);
+      //   });
+      // }
 
-      if (status === 400) {
-        alert("Registration failed: Missing or invalid fields. Please check your input.");
-      } else if (status === 413) {
-        alert("File size/Type mismatching(Accepted type PDF, JPEG, JPG). Please upload files smaller than 10MB.");
-      } else if (status === 500) {
-        alert("Server error. Please try again later.");
+      const fullData = { ...group, vehicleType: option };
+      const formData = new FormData();
+      //formData.append('formData', new Blob([JSON.stringify(fullData)], { type: "application/json" }));
+      formData.append('formData', JSON.stringify(fullData));
+      if (group.licensePhoto) formData.append('licensePhoto', group.licensePhoto);
+      if (group.passportCopy) formData.append('passportCopy', group.passportCopy);
+      if (group.photoIdCopy) formData.append('photoIdCopy', group.photoIdCopy);
+
+      formData.append('signatureFile', signatureFile);
+
+      // ✅ Calculate and log individual file sizes added by ragu 19th jun
+      const fileSizes = {
+        licensePhoto: group.licensePhoto ? group.licensePhoto.size : 0,
+        passportCopy: group.passportCopy ? group.passportCopy.size : 0,
+        photoIdCopy: group.photoIdCopy ? group.photoIdCopy.size : 0,
+        signatureFile: signatureFile.size
+      };
+
+      const readableSizes = Object.fromEntries(
+        Object.entries(fileSizes).map(([key, size]) => [
+          key,
+          `${(size / (1024 * 1024)).toFixed(2)} MB`
+        ])
+      );
+
+      const totalSizeMB = (
+        Object.values(fileSizes).reduce((a, b) => a + b, 0) / (1024 * 1024)
+      ).toFixed(2);
+
+      console.log("📎 Individual File Sizes:");
+      console.table(readableSizes);
+      console.log("📦 Total Upload Size:", `${totalSizeMB} MB`); 
+      // above code added by ragu 19th jun
+
+
+      await axios.post(`${config.BASE_URL}/register`, formData);
+
+      // await axios.post(`${config.BASE_URL}/register`, formData, {
+      //   headers: { 'Content-Type': 'multipart/form-data' }
+      // });
+
+      alert('Vehicle registered successfully. Awaiting admin approval.');
+      setGroup(initialFormState);
+      setOption("");
+      sigCanvas.current.clear();
+      navigate('/about');
+
+    } catch (error) {
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+          alert("Registration failed: Missing or invalid fields. Please check your input.");
+        } else if (status === 413) {
+          alert("File size/Type mismatching(Accepted type PDF, JPEG, JPG). Please upload files smaller than 10MB.");
+        } else if (status === 500) {
+          alert("Server error. Please try again later.");
+        } else {
+          alert("Please check the file Size/Type, input fields, Signature. And try again");
+        }
+
+        console.error(`Axios Error ${status}:`, data);
+      } else if (error.request) {
+        // Request was made but no response (e.g., offline)
+        alert("OverAll uploaded File size too large, Please compress your file and each file must not exceed 10MB");
+        console.error("No response received:", error.request);
       } else {
-        alert("Please check the file Size/Type, input fields, Signature. And try again");
+        // Something else caused the error
+        alert("Unexpected error. Please try again.");
+        console.error("Error", error.message);
+        console.error("Safari/iOS error details:", error);
       }
-
-      console.error(`Axios Error ${status}:`, data);
-    } else if (error.request) {
-      // Request was made but no response (e.g., offline)
-      alert("OverAll uploaded File size too large, Please compress your file and each file must not exceed 10MB");
-      console.error("No response received:", error.request);
-    } else {
-      // Something else caused the error
-      alert("Unexpected error. Please try again.");
-      console.error("Error", error.message);
-      console.error("Safari/iOS error details:", error);
     }
-  }
-};
+  };
 
 
 
@@ -832,7 +857,7 @@ const handleSubmit = async (event) => {
               <button
                 type="button"
                 onClick={() => setShowTermsModal(true)}
-                style={{ background: 'none', border: 'none', padding: 0, color: '#007bff', fontSize: '14px',textDecoration: 'underline', cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', padding: 0, color: '#007bff', fontSize: '14px', textDecoration: 'underline', cursor: 'pointer' }}
               >
                 Terms and Conditions
               </button>
