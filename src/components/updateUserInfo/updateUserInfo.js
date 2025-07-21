@@ -16,7 +16,7 @@ export default function UpdateUserInfo() {
   });
 
   useEffect(() => {
-    fetch(`${config.BASE_URL}/vehicle/getUser/${id}`)
+    fetch(`${config.BASE_URL}/userVehicle/getUser/${id}`)
       .then(res => res.json())
       .then(data => setUserInfo(data));
   }, [id]);

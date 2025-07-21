@@ -1,17 +1,16 @@
-// File: UpdateVehicleInfo.js
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './updateVehicleInfo.css';
 import config from '../../config';
 
 export default function UpdateVehicleInfo() {
-  const { id } = useParams();
+  const { id } = useParams(); // this is userId
   const navigate = useNavigate();
 
   const [vehicles, setVehicles] = useState([]);
 
   useEffect(() => {
-    fetch(`${config.BASE_URL}/vehicle/getUser/${id}`)
+    fetch(`${config.BASE_URL}/userVehicle/getUser/${id}`)
       .then(res => res.json())
       .then(data => setVehicles(data.vehicles || []));
   }, [id]);
@@ -25,13 +24,34 @@ export default function UpdateVehicleInfo() {
     });
   };
 
-  const handleVehicleSubmit = async (vehicleId, updatedVehicle) => {
-    await fetch(`${config.BASE_URL}/vehicle/update/${id}`, {
+  const countActiveVehicles = () => {
+    return vehicles.filter(v => v.vehicleStatus === 'Active').length;
+  };
+
+  const handleVehicleSubmit = async (userId, updatedVehicle) => {
+    // Limit max 2 active vehicles
+    const activeCount = countActiveVehicles();
+    if (updatedVehicle.vehicleStatus === 'Active' && activeCount > 2) {
+      alert('Only 2 vehicles can be Active at a time. Please mark one existing vehicle as Inactive before adding a new Active vehicle.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${config.BASE_URL}/userVehicle/updateVehicleInfoToUser/${userId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updatedVehicle)
     });
-    alert(`Vehicle ID ${vehicleId} updated successfully`);
+
+      const text = await res.text();
+      if (res.ok) {
+    alert(`Vehicle ID updated successfully`);
+      } else {
+        alert(`Error: ${text}`);
+      }
+    } catch (err) {
+      alert(`Something went wrong: ${err.message}`);
+    }
   };
 
   const renderInput = (name, placeholder, value, onChange) => (
@@ -53,11 +73,11 @@ export default function UpdateVehicleInfo() {
       <h1 className="page-header">Update Vehicle Details</h1>
 
       {vehicles.map((vehicle, index) => (
-        <div key={vehicle.id} className="vehicle-card">
+        <div key={vehicle.vehicleId} className="vehicle-card">
           <div className="vehicle-row">
-            {renderInput('make', 'Make', vehicle.make, e => handleVehicleChange(index, e))}
-            {renderInput('model', 'Model', vehicle.model, e => handleVehicleChange(index, e))}
-            {renderInput('year', 'Year', vehicle.year, e => handleVehicleChange(index, e))}
+            {renderInput('vehicleMake', 'Make', vehicle.vehicleMake, e => handleVehicleChange(index, e))}
+            {renderInput('vehicleModel', 'Model', vehicle.vehicleModel, e => handleVehicleChange(index, e))}
+            {renderInput('vehicleYear', 'Year', vehicle.vehicleYear, e => handleVehicleChange(index, e))}
           </div>
           <div className="vehicle-row">
             {renderInput('registrationNumber', 'Registration Number', vehicle.registrationNumber, e => handleVehicleChange(index, e))}
@@ -71,6 +91,28 @@ export default function UpdateVehicleInfo() {
             {renderInput('bondStartDate', 'Start Date', vehicle.bondStartDate, e => handleVehicleChange(index, e))}
             {renderInput('bondEndDate', 'End Date', vehicle.bondEndDate, e => handleVehicleChange(index, e))}
           </div>
+
+          <div className="vehicle-row">
+            <div className="input-block">
+              <label>Status</label>
+              <div className="status-toggle">
+                <input
+                  type="checkbox"
+                  checked={vehicle.vehicleStatus === 'Active'}
+                  onChange={e =>
+                    handleVehicleChange(index, {
+                      target: {
+                        name: 'vehicleStatus',
+                        value: e.target.checked ? 'Active' : 'InActive'
+                      }
+                    })
+                  }
+                />
+                <span>{vehicle.vehicleStatus === 'Active' ? 'Active' : 'InActive'}</span>
+              </div>
+            </div>
+          </div>
+
           <div className="vehicle-row full-width">
             <label>Note</label>
             <textarea
@@ -82,7 +124,7 @@ export default function UpdateVehicleInfo() {
           </div>
 
           <div className="vehicle-actions">
-            <button onClick={() => handleVehicleSubmit(vehicle.id, vehicle)}>Update Vehicle #{index + 1}</button>
+            <button onClick={() => handleVehicleSubmit(id, vehicle)}>Update Vehicle #{index + 1}</button>
           </div>
         </div>
       ))}

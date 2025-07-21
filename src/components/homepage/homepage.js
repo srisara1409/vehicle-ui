@@ -45,10 +45,10 @@ export default function Homepage() {
     bondWeeks: "",
     bondStartDate: null,
     bondEndDate: null,
-    make: "",
-    model: "",
+    vehicleMake: "",
+    vehicleModel: "",
     registrationNumber: "",
-    year: "",
+    vehicleYear: "",
     fuelType: "",
     note: "",
     licenseFile: null,
@@ -57,7 +57,7 @@ export default function Homepage() {
   });
 
   useEffect(() => {
-    fetch(`${config.BASE_URL}/vehicle/getUser`)
+    fetch(`${config.BASE_URL}/userVehicle/getUser`)
       .then((res) => res.json())
       .then((data) => setVehicles(data))
       .catch((err) => console.error("Error fetching data:", err));
@@ -92,9 +92,9 @@ export default function Homepage() {
       userId: vehicle.id,
       vehicleType: vehicle.vehicleType || "",
       registrationNumber: vehicle.registrationNumber || vehicle.vehicles?.[0]?.registrationNumber || "",
-      make: vehicle.make || "",
-      model: vehicle.model || "",
-      year: vehicle.year || "",
+      vehicleMake: vehicle.vehicleMake || "",
+      vehicleModel: vehicle.vehicleModel || "",
+      vehicleYear: vehicle.vehicleYear || "",
       fuelType: vehicle.fuelType || "",
       note: vehicle.note || ""
     });
@@ -105,9 +105,9 @@ export default function Homepage() {
     const {
       bondAmount,
       bondWeeks,
-      make,
-      year,
-      model,
+      vehicleMake,
+      vehicleYear,
+      vehicleModel,
       registrationNumber,
       fuelType,
       note,
@@ -148,7 +148,7 @@ export default function Homepage() {
       const formattedStart = format(bondStartDate, "dd-MM-yyyy hh:mm aa");
       const formattedEnd = bondEndDate ? format(bondEndDate, "dd-MM-yyyy hh:mm aa") : null;
 
-      await fetch(`${config.BASE_URL}/vehicle/approve/${selectedVehicle.id}`, {
+      await fetch(`${config.BASE_URL}/userVehicle/approve/${selectedVehicle.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -156,9 +156,9 @@ export default function Homepage() {
           bondWeeks,
           bondStartDate: formattedStart,
           bondEndDate: formattedEnd,
-          make,
-          year,
-          model,
+          vehicleMake,
+          vehicleYear,
+          vehicleModel,
           registrationNumber,
           fuelType,
           note
@@ -187,10 +187,10 @@ export default function Homepage() {
         bondWeeks: "",
         bondStartDate: "",
         bondEndDate: "",
-        make: "",
-        model: "",
+        vehicleMake: "",
+        vehicleModel: "",
         registrationNumber: "",
-        year: "",
+        vehicleYear: "",
         fuelType: "",
         note: "",
         licenseFile: null,
@@ -214,7 +214,7 @@ export default function Homepage() {
   };
 
   const refreshList = () => {
-    fetch(`${config.BASE_URL}/vehicle/getUser`)
+    fetch(`${config.BASE_URL}/userVehicle/getUser`)
       .then((res) => res.json())
       .then((data) => setVehicles(data));
   };
@@ -408,9 +408,9 @@ export default function Homepage() {
                 bondEndDate: "",
                 registrationNumber: "",
                 rentDuration: "",
-                make: "",
-                model: "",
-                year: "",
+                vehicleMake: "",
+                vehicleModel: "",
+                vehicleYear: "",
                 fuelType: "",
                 note: ""
               });
@@ -536,7 +536,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
 
                 if (value.length === 3) {
                   try {
-                    const response = await axios.get(`${config.BASE_URL}/vehicle/search?regNumber=${value}`);
+                    const response = await axios.get(`${config.BASE_URL}/adminVehicle/search?regNumber=${value}`);
                     setSuggestions(response.data);
                   } catch (err) {
                     console.error("Vehicle search error", err);
@@ -555,15 +555,15 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
                       setFormInputs({
                         ...formInputs,
                         registrationNumber: vehicle.registrationNumber,
-                        make: vehicle.make,
-                        model: vehicle.model,
-                        year: vehicle.year,
+                        vehicleMake: vehicle.vehicleMake,
+                        vehicleModel: vehicle.vehicleModel,
+                        vehicleYear: vehicle.vehicleYear,
                         fuelType: vehicle.fuelType
                       });
                       setSuggestions([]);
                     }}
                   >
-                    {vehicle.registrationNumber} - {vehicle.make} {vehicle.model} ({vehicle.year})
+                    {vehicle.registrationNumber} - {vehicle.vehicleMake} {vehicle.vehicleModel} ({vehicle.vehicleYear})
                   </li>
                 ))}
               </ul>
@@ -581,18 +581,18 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
         <div className="row">
           <div className="input-group">
             <label>Make</label>
-            <input type="text" value={formInputs.make} onChange={(e) => setFormInputs({ ...formInputs, make: e.target.value })} />
+            <input type="text" value={formInputs.vehicleMake} onChange={(e) => setFormInputs({ ...formInputs, vehicleMake: e.target.value })} />
           </div>
           <div className="input-group">
             <label>Model</label>
-            <input type="text" value={formInputs.model} onChange={(e) => setFormInputs({ ...formInputs, model: e.target.value })} />
+            <input type="text" value={formInputs.vehicleModel} onChange={(e) => setFormInputs({ ...formInputs, vehicleModel: e.target.value })} />
           </div>
         </div>
 
         <div className="row">
           <div className="input-group">
             <label>Year</label>
-            <input type="text" value={formInputs.year} onChange={(e) => setFormInputs({ ...formInputs, year: e.target.value })} />
+            <input type="text" value={formInputs.vehicleYear} onChange={(e) => setFormInputs({ ...formInputs, vehicleYear: e.target.value })} />
           </div>
           <div className="input-group">
             <label>Fuel Type</label>
