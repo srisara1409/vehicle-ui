@@ -81,9 +81,9 @@ export default function VehiclePage() {
       {message && <p className="message">{message}</p>}
       <form onSubmit={handleSubmit} className="vehicle-form" autoComplete="off">
         <input type="text" name="registrationNumber" value={vehicle.registrationNumber} placeholder="Registration Number" onChange={handleChange} required />
-        <input type="text" name="model" value={vehicle.model} placeholder="Model" onChange={handleChange} required />
-        <input type="text" name="make" value={vehicle.make} placeholder="Make" onChange={handleChange} required />
-        <input type="number" name="year" value={vehicle.year} placeholder="Year" onChange={handleChange} required />
+        <input type="text" name="vehicleModel" value={vehicle.vehicleModel} placeholder="Model" onChange={handleChange} required />
+        <input type="text" name="vehicleMake" value={vehicle.vehicleMake} placeholder="Make" onChange={handleChange} required />
+        <input type="number" name="vehicleYear" value={vehicle.vehicleYear} placeholder="Year" onChange={handleChange} required />
         <input type="text" name="fuelType" value={vehicle.fuelType} placeholder="Fuel Type" onChange={handleChange} required />
         <input type="text" name="vehicleType" value={vehicle.vehicleType} placeholder="Vehicle Type" onChange={handleChange} required />
         <button type="submit" className="add-button">Add Vehicle</button>
@@ -126,9 +126,9 @@ export default function VehiclePage() {
               .map((v, index) => (
                 <tr key={v.id || index}>
                   <td>{v.registrationNumber}</td>
-                  <td>{v.model}</td>
-                  <td>{v.make}</td>
-                  <td>{v.year}</td>
+                  <td>{v.vehicleModel}</td>
+                  <td>{v.vehicleMake}</td>
+                  <td>{v.vehicleYear}</td>
                   <td>{v.fuelType}</td>
                   <td>{v.vehicleType}</td>
                   <td>
