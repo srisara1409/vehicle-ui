@@ -7,9 +7,9 @@ export default function VehiclePage() {
   const [vehicleList, setVehicleList] = useState([]);
   const [vehicle, setVehicle] = useState({
     registrationNumber: '',
-    model: '',
-    make: '',
-    year: '',
+    vehicleModel: '',
+    vehicleMake: '',
+    vehicleYear: '',
     fuelType: '',
     vehicleType: ''
   });
@@ -20,7 +20,7 @@ export default function VehiclePage() {
 
   const fetchVehicles = async () => {
     try {
-      const response = await axios.get(`${config.BASE_URL}/vehicle/allVehicle`);
+      const response = await axios.get(`${config.BASE_URL}/adminVehicle/allVehicle`);
       setVehicleList(response.data);
     } catch (error) {
       console.error('Error fetching vehicles', error);
@@ -39,13 +39,13 @@ export default function VehiclePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${config.BASE_URL}/vehicle/addVehicle`, vehicle);
+      const res = await axios.post(`${config.BASE_URL}/adminVehicle/addVehicle`, vehicle);
       setMessage(res.data);
       setVehicle({
         registrationNumber: '',
-        model: '',
-        make: '',
-        year: '',
+        vehicleModel: '',
+        vehicleMake: '',
+        vehicleYear: '',
         fuelType: '',
         vehicleType: ''
       });
@@ -67,7 +67,7 @@ export default function VehiclePage() {
 
   const updateStatus = async (registrationNumber, status) => {
     try {
-      await axios.put(`${config.BASE_URL}/vehicle/updateVehicleStatus/${registrationNumber}?status=${status}`);
+      await axios.put(`${config.BASE_URL}/adminVehicle/updateVehicleStatus/${registrationNumber}?status=${status}`);
       setMessage("Status updated successfully.");
     } catch (error) {
       console.error("Error updating vehicle status:", error);
@@ -133,13 +133,13 @@ export default function VehiclePage() {
                   <td>{v.vehicleType}</td>
                   <td>
                     <select
-                      value={v.status}
+                      value={v.vehicleStatus}
                       onChange={(e) => handleStatusChange(index, e.target.value)}
                     >
                       <option value="Active">Active</option>
                       <option value="Sold">Sold</option>
                     </select>
-                    <button onClick={() => updateStatus(v.registrationNumber, v.status)}>
+                    <button onClick={() => updateStatus(v.registrationNumber, v.vehicleStatus)}>
                       ✅
                     </button>
                   </td>

@@ -18,7 +18,7 @@ export default function UpdateUserInfo() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${config.BASE_URL}/vehicle/getUser/${id}`);
+        const res = await fetch(`${config.BASE_URL}/userVehicle/getUser/${id}`);
         const data = await res.json();
         if (data) setUserInfo(prev => ({ ...prev, ...data, id }));
       } catch (err) {
