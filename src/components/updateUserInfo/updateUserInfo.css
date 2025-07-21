@@ -166,6 +166,12 @@
   .close-button:hover {
     color: #ef4444;
   }
+
+  input:disabled {
+    background-color: #f1f1f1;
+    cursor: not-allowed;
+    color: #555;
+  }
   
   /* Mobile responsiveness */
   @media (max-width: 768px) {
