@@ -12,7 +12,7 @@ import axios from 'axios';
 
 // added by Ragu from here
 // Helper: Compress image to JPEG under 10MB with adjusted dimensions
-export const compressImage = (file, maxSizeMB = 10, maxWidth = 1024) => {
+export const compressImage = (file, maxSizeMB = 5, maxWidth = 1024) => {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith("image/")) {
       resolve(file); // Skip compression for non-images
@@ -157,11 +157,11 @@ const Register = () => {
         }
       };
 
-      if (file.size <= 10 * 1024 * 1024) {
+      if (file.size <= 5 * 1024 * 1024) {
         handleCompressed(file);
       } else if (isImage) {
-        compressImage(file, 10, 1024).then((compressed) => {
-          if (compressed.size <= 10 * 1024 * 1024) {
+        compressImage(file, 5, 1024).then((compressed) => {
+          if (compressed.size <= 5 * 1024 * 1024) {
             handleCompressed(compressed);
           } else {
             alert("Compressed image is still too large. Please choose a smaller one.");
@@ -170,7 +170,7 @@ const Register = () => {
           alert("Image compression failed. Please try a different image.");
         });
       } else {
-        alert("PDF file is too large. Please upload one smaller than 10MB.");
+        alert("PDF file is too large. Please upload a file smaller than 5MB.");
       }
       return;
     }
@@ -252,10 +252,10 @@ const Register = () => {
       if (!group.licenseNumber) newErrors.licenseNumber = 'Enter valid License Number';
       if (!group.licenseState) newErrors.licenseState = 'Enter License Obtained State';
       if (!group.licenseCountry) newErrors.licenseCountry = 'Enter License Obtained Country';
-      if (!group.licensePhoto) newErrors.licensePhoto = 'Attach a file less than 10MB';
-      if (!group.passportCopy) newErrors.passportCopy = 'Attach a file less than 10MB';
+      if (!group.licensePhoto) newErrors.licensePhoto = 'Attach a file less than 5MB';
+      if (!group.passportCopy) newErrors.passportCopy = 'Attach a file less than 5MB';
     }
-    if (option === 'ebike' && !group.photoIdCopy) newErrors.photoIdCopy = 'Attach a file less than 10MB';
+    if (option === 'ebike' && !group.photoIdCopy) newErrors.photoIdCopy = 'Attach a file less than 5MB';
     if (!group.addressLine1) newErrors.addressLine1 = 'Enter Address Line1';
     if (!group.city) newErrors.city = 'Enter valid City';
     if (!group.postalCode) newErrors.postalCode = 'Enter valid Postal Code';
@@ -378,7 +378,7 @@ const Register = () => {
 
       console.log("📎 Individual File Sizes:");
       console.table(readableSizes);
-      console.log("📦 Total Upload Size:", `${totalSizeMB} MB`); 
+      console.log("📦 Total Upload Size:", `${totalSizeMB} MB`);
       // above code added by ragu 19th jun
 
 
@@ -401,7 +401,7 @@ const Register = () => {
         if (status === 400) {
           alert("Registration failed: Missing or invalid fields. Please check your input.");
         } else if (status === 413) {
-          alert("File size/Type mismatching(Accepted type PDF, JPEG, JPG). Please upload files smaller than 10MB.");
+          alert("File size/Type mismatching(Accepted type PDF, JPEG, JPG). Please upload files smaller than 5MB.");
         } else if (status === 500) {
           alert("Server error. Please try again later.");
         } else {
@@ -411,7 +411,7 @@ const Register = () => {
         console.error(`Axios Error ${status}:`, data);
       } else if (error.request) {
         // Request was made but no response (e.g., offline)
-        alert("OverAll uploaded File size too large, Please compress your file and each file must not exceed 10MB");
+        alert("OverAll uploaded File size too large, Please compress your file and each file must not exceed 5MB");
         console.error("No response received:", error.request);
       } else {
         // Something else caused the error
@@ -421,8 +421,6 @@ const Register = () => {
       }
     }
   };
-
-
 
 
   return (
@@ -640,6 +638,10 @@ const Register = () => {
                     onBlur={handleBlur}
                     accept="image/*,application/pdf"
                   />
+                  {/* Add max file size text */}
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '5px' }}>
+                    Max file size: 5MB
+                  </div>
                   {previews.licensePhoto && (
                     <div style={{ marginTop: '10px' }}>
                       <a
@@ -671,6 +673,10 @@ const Register = () => {
                     onBlur={handleBlur}
                     accept="image/*,application/pdf"
                   />
+                  {/* Add max file size text */}
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '5px' }}>
+                    Max file size: 5MB
+                  </div>
                   {previews.passportCopy && (
                     <div style={{ marginTop: '10px' }}>
                       <a
@@ -707,6 +713,10 @@ const Register = () => {
                     onBlur={handleBlur}
                     accept="image/*,application/pdf"
                   />
+                  {/* Add max file size text */}
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '5px' }}>
+                    Max file size: 5MB
+                  </div>
                   {previews.photoIdCopy && (
                     <div style={{ marginTop: '10px' }}>
                       <a

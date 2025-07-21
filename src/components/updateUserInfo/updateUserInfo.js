@@ -1,4 +1,3 @@
-// File: UpdateUserInfo.js
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './updateUserInfo.css';
@@ -9,6 +8,7 @@ export default function UpdateUserInfo() {
   const navigate = useNavigate();
 
   const [userInfo, setUserInfo] = useState({
+    id: '', // include this for file URLs
     firstName: '', lastName: '', dateOfBirth: '', email: '', mobileNumber: '',
     emergencyContactName: '', emergencyContactNumber: '',
     addressLine1: '', addressLine2: '', city: '', state: '', postalCode: '', country: '', bankName: '',
@@ -16,9 +16,16 @@ export default function UpdateUserInfo() {
   });
 
   useEffect(() => {
-    fetch(`${config.BASE_URL}/vehicle/getUser/${id}`)
-      .then(res => res.json())
-      .then(data => setUserInfo(data));
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`${config.BASE_URL}/vehicle/getUser/${id}`);
+        const data = await res.json();
+        if (data) setUserInfo(prev => ({ ...prev, ...data, id }));
+      } catch (err) {
+        console.error("Error fetching user:", err);
+      }
+    };
+    fetchUser();
   }, [id]);
 
   const handleUserChange = (e) => {
@@ -27,15 +34,24 @@ export default function UpdateUserInfo() {
   };
 
   const handleUserSubmit = async () => {
-    await fetch(`${config.BASE_URL}/register/update/${id}`, {
+    try {
+      const res = await fetch(`${config.BASE_URL}/register/update/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userInfo)
     });
+      if (res.ok) {
     alert("User details updated successfully.");
+        navigate('/homepage'); // Uncomment to auto-redirect
+      } else {
+        alert("Failed to update. Please try again.");
+      }
+    } catch (err) {
+      console.error("Update failed:", err);
+    }
   };
 
-  const renderInput = (name, placeholder, value) => (
+  const renderInput = (name, placeholder, value, disabled = false) => (
     <div className="input-field">
       <label htmlFor={name}>{placeholder}</label>
       <input
@@ -45,6 +61,7 @@ export default function UpdateUserInfo() {
         value={value || ''}
         onChange={handleUserChange}
         placeholder={placeholder}
+        disabled={disabled}
       />
     </div>
   );
@@ -61,7 +78,7 @@ export default function UpdateUserInfo() {
           {renderInput('lastName', 'Last Name', userInfo.lastName)}
           {renderInput('dateOfBirth', 'Date of Birth', userInfo.dateOfBirth)}
         </div>
-        
+
         <div className="form-row">
           {renderInput('email', 'Email', userInfo.email)}
           {renderInput('mobileNumber', 'Mobile Number', userInfo.mobileNumber)}
@@ -85,12 +102,12 @@ export default function UpdateUserInfo() {
 
         <h2>Bank Details</h2>
         <div className="form-row">
-          {renderInput('bankName', 'Bank Name', userInfo.bankName)}
-          {renderInput('accountName', 'Name as per Bank', userInfo.accountName)}
+          {renderInput('bankName', 'Bank Name', userInfo.bankName, true)}
+          {renderInput('accountName', 'Name as per Bank', userInfo.accountName, true)}
         </div>
         <div className="form-row">
-          {renderInput('bsbNumber', 'BSB No', userInfo.bsbNumber)}
-          {renderInput('accountNumber', 'Account Number', userInfo.accountNumber)}
+          {renderInput('bsbNumber', 'BSB No', userInfo.bsbNumber, true)}
+          {renderInput('accountNumber', 'Account Number', userInfo.accountNumber, true)}
         </div>
 
         <h2>License Info</h2>
@@ -105,15 +122,49 @@ export default function UpdateUserInfo() {
         </div>
 
         <div className="form-row file-links">
+          {['car', 'motorbike'].includes(userInfo.vehicleType?.toLowerCase()) && (
+            <>
+              <div>
+                <label>Uploaded License</label><br />
+                {userInfo.id && (
+                  <a href={`${config.BASE_URL}/register/file/${userInfo.id}/license`} target="_blank" rel="noopener noreferrer">
+                    View License
+                  </a>
+                )}
+              </div>
+              <div>
+                <label>Uploaded Passport</label><br />
+                {userInfo.id && (
+                  <a href={`${config.BASE_URL}/register/file/${userInfo.id}/passport`} target="_blank" rel="noopener noreferrer">
+                    View Passport
+                  </a>
+                )}
+              </div>
+            </>
+          )}
+
+          {userInfo.vehicleType?.toLowerCase() === 'ebike' && (
+            <div>
+              <label>Government Photo ID</label><br />
+              {userInfo.id && (
+                <a href={`${config.BASE_URL}/register/file/${userInfo.id}/photoid`} target="_blank" rel="noopener noreferrer">
+                  View Government ID
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Common for all vehicle types */}
           <div>
-            <label>Uploaded License</label><br />
-            {userInfo.id && <a href={`${config.BASE_URL}/register/file/${userInfo.id}/license`} target="_blank" rel="noopener noreferrer">View License</a>}
-          </div>
-          <div>
-            <label>Uploaded Passport</label><br />
-            {userInfo.id && <a href={`${config.BASE_URL}/register/file/${userInfo.id}/passport`} target="_blank" rel="noopener noreferrer">View Passport</a>}
+            <label>Bank File</label><br />
+            {userInfo.id && (
+              <a href={`${config.BASE_URL}/register/file/${userInfo.id}/bankpdf`} target="_blank" rel="noopener noreferrer">
+                View Bank Statement
+              </a>
+            )}
           </div>
         </div>
+
 
         <div className="button-row">
           <button onClick={handleUserSubmit}>Update User</button>
