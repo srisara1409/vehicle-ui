@@ -61,13 +61,13 @@ export default function VehiclePage() {
 
   const handleStatusChange = (index, newStatus) => {
     const updatedList = [...vehicleList];
-    updatedList[index].status = newStatus;
+    updatedList[index].vehicleStatus  = newStatus;
     setVehicleList(updatedList);
   };
 
-  const updateStatus = async (registrationNumber, status) => {
+  const updateStatus = async (registrationNumber, vehicleStatus ) => {
     try {
-      await axios.put(`${config.BASE_URL}/adminVehicle/updateVehicleStatus/${registrationNumber}?status=${status}`);
+      await axios.put(`${config.BASE_URL}/adminVehicle/updateVehicleStatus/${registrationNumber}?status=${vehicleStatus }`);
       setMessage("Status updated successfully.");
     } catch (error) {
       console.error("Error updating vehicle status:", error);
@@ -124,7 +124,7 @@ export default function VehiclePage() {
                 !searchText || v.registrationNumber.toLowerCase().includes(searchText.toLowerCase())
               )
               .map((v, index) => (
-                <tr key={v.id || index}>
+                <tr key={v.adminVehicleId || index}>
                   <td>{v.registrationNumber}</td>
                   <td>{v.vehicleModel}</td>
                   <td>{v.vehicleMake}</td>
