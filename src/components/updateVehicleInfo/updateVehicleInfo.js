@@ -8,12 +8,27 @@ export default function UpdateVehicleInfo() {
   const navigate = useNavigate();
 
   const [vehicles, setVehicles] = useState([]);
+  const [inactiveVehicles, setInactiveVehicles] = useState([]);
 
   useEffect(() => {
+    fetchVehicles();
+    fetchInactiveVehicles();
+  }, [id]);
+
+  const fetchVehicles = () => {
     fetch(`${config.BASE_URL}/userVehicle/getUser/${id}`)
       .then(res => res.json())
       .then(data => setVehicles(data.vehicles || []));
-  }, [id]);
+  };
+
+  const fetchInactiveVehicles = () => {
+    fetch(`${config.BASE_URL}/userVehicle/inactiveVehicles/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("Fetched inactive vehicles:", data);
+        setInactiveVehicles(Array.isArray(data) ? data : []);
+      });
+  };
 
   const handleVehicleChange = (index, event) => {
     const { name, value } = event.target;
@@ -29,28 +44,53 @@ export default function UpdateVehicleInfo() {
   };
 
   const handleVehicleSubmit = async (userId, updatedVehicle) => {
-    // Limit max 2 active vehicles
     const activeCount = countActiveVehicles();
     if (updatedVehicle.vehicleStatus === 'Active' && activeCount > 2) {
       alert('Only 2 vehicles can be Active at a time. Please mark one existing vehicle as Inactive before adding a new Active vehicle.');
+      fetchVehicles();
+      fetchInactiveVehicles();
       return;
     }
 
     try {
       const res = await fetch(`${config.BASE_URL}/userVehicle/updateVehicleInfoToUser/${userId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updatedVehicle)
-    });
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedVehicle)
+      });
 
       const text = await res.text();
       if (res.ok) {
-    alert(`Vehicle ID updated successfully`);
+        alert(`Vehicle ID updated successfully`);
+        fetchInactiveVehicles();
+        fetchVehicles();
       } else {
         alert(`Error: ${text}`);
       }
     } catch (err) {
       alert(`Something went wrong: ${err.message}`);
+    }
+  };
+
+  const handleStatusUpdate = async (userVehicleId, newStatus) => {
+    try {
+      const res = await fetch(`${config.BASE_URL}/userVehicle/updateUserVehicleStatus/${userVehicleId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vehicleStatus: newStatus })
+        
+      });
+
+      const text = await res.text();
+      if (res.ok) {
+        alert('Status updated successfully');
+        fetchInactiveVehicles();
+        fetchVehicles();
+      } else {
+        alert(`Error: ${text}`);
+      }
+    } catch (err) {
+      alert(`Failed: ${err.message}`);
     }
   };
 
@@ -91,24 +131,26 @@ export default function UpdateVehicleInfo() {
             {renderInput('bondStartDate', 'Start Date', vehicle.bondStartDate, e => handleVehicleChange(index, e))}
             {renderInput('bondEndDate', 'End Date', vehicle.bondEndDate, e => handleVehicleChange(index, e))}
           </div>
-
           <div className="vehicle-row">
             <div className="input-block">
               <label>Status</label>
-              <div className="status-toggle">
-                <input
-                  type="checkbox"
-                  checked={vehicle.vehicleStatus === 'Active'}
-                  onChange={e =>
-                    handleVehicleChange(index, {
-                      target: {
-                        name: 'vehicleStatus',
-                        value: e.target.checked ? 'Active' : 'InActive'
-                      }
-                    })
-                  }
-                />
-                <span>{vehicle.vehicleStatus === 'Active' ? 'Active' : 'InActive'}</span>
+              <div className="toggle-switch">
+                <label className="switch">
+                  <input
+                    type="checkbox"
+                    checked={vehicle.vehicleStatus === 'Active'}
+                    onChange={e =>
+                      handleVehicleChange(index, {
+                        target: {
+                          name: 'vehicleStatus',
+                          value: e.target.checked ? 'Active' : 'InActive'
+                        }
+                      })
+                    }
+                  />
+                  <span className="slider"></span>
+                </label>
+                <span className="status-label">{vehicle.vehicleStatus}</span>
               </div>
             </div>
           </div>
@@ -128,6 +170,53 @@ export default function UpdateVehicleInfo() {
           </div>
         </div>
       ))}
+
+      <h2 style={{ marginTop: '40px' }}>Inactive Vehicles</h2>
+
+      <table className="inactive-vehicle-table">
+        <thead>
+          <tr>
+            <th>REGISTRATION NO</th>
+            <th>MODEL</th>
+            <th>MAKE</th>
+            <th>YEAR</th>
+            <th>FUEL TYPE</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.isArray(inactiveVehicles) && inactiveVehicles.length > 0 ? (
+            inactiveVehicles.map(v => (
+              <tr key={v.userVehicleId}>
+                <td>{v.registrationNumber}</td>
+                <td>{v.vehicleModel}</td>
+                <td>{v.vehicleMake}</td>
+                <td>{v.vehicleYear}</td>
+                <td>{v.fuelType}</td>
+                <td>
+                  <select
+                    value={v.vehicleStatus}
+                    onChange={(e) => handleStatusUpdate(v.userVehicleId, e.target.value)}
+                  >
+                    <option value="InActive">InActive</option>
+                    <option value="Active">Active</option>
+                  </select>
+                  <button
+                    onClick={() => handleStatusUpdate(v.userVehicleId, v.vehicleStatus)}
+                    style={{ marginLeft: '8px' }}
+                  >
+                    ✅
+                  </button>
+                </td>
+              </tr>
+
+            ))
+          ) : (
+            <tr><td colSpan="6">No inactive vehicles found.</td></tr>
+          )}
+
+        </tbody>
+      </table>
 
       <div className="back-buttonv">
         <button onClick={() => navigate('/homepage')}>Back to Home</button>

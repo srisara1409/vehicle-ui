@@ -251,3 +251,37 @@ h1, h2 {
     font-size: 0.85rem;
   }
 }
+
+pagination-table-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px;
+  margin-top: -8px;
+}
+
+.pagination-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagination-btn {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.pagination-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.page-number {
+  font-size: 0.8rem;
+  font-weight: 500;
+}

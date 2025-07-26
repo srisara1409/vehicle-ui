@@ -14,15 +14,20 @@ export default function Homepage() {
   const [searchText, setSearchText] = useState("");
   const [vehicles, setVehicles] = useState([]);
   const [errors, setErrors] = useState({});
-
+  const [currentPageMap, setCurrentPageMap] = useState({
+    Pending: 1,
+    Approved: 1,
+    Closed: 1,
+  });
+  const itemsPerPage = 10;
   const navigate = useNavigate();
 
   const safeFormat = (value) => {
     try {
       if (!value) return "N/A";
-  
+
       let date;
-  
+
       if (value instanceof Date) {
         date = value;
       } else if (typeof value === 'string') {
@@ -30,9 +35,9 @@ export default function Homepage() {
       } else {
         return "N/A";
       }
-  
+
       if (!isValid(date)) throw new Error("Invalid date");
-  
+
       return format(date, "dd-MM-yyyy hh:mm aa");
     } catch (err) {
       console.error("Failed to format:", value);
@@ -65,12 +70,12 @@ export default function Homepage() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
-  
+
     try {
       const response = await fetch(`${config.BASE_URL}/register/delete/${id}`, {
         method: 'DELETE'
       });
-  
+
       if (response.ok) {
         alert("Record deleted successfully.");
         // Refresh or filter the list
@@ -237,6 +242,20 @@ export default function Homepage() {
     Approved: filteredVehicles.filter((v) => v.status === "APPROVED"),
     Closed: filteredVehicles.filter((v) => v.status === "CLOSED")
   };
+  const paginate = (status) => {
+    const page = currentPageMap[status];
+    const startIndex = (page - 1) * itemsPerPage;
+    return grouped[status].slice(startIndex, startIndex + itemsPerPage);
+  };
+
+  const changePage = (status, direction) => {
+    setCurrentPageMap((prev) => {
+      const total = grouped[status].length;
+      const maxPage = Math.ceil(total / itemsPerPage);
+      const newPage = Math.max(1, Math.min(maxPage, prev[status] + direction));
+      return { ...prev, [status]: newPage };
+    });
+  };
 
   return (
     <div className="homepage-body">
@@ -261,6 +280,7 @@ export default function Homepage() {
             {grouped[status].length === 0 ? (
               <p>No {status.toLowerCase()} requests.</p>
             ) : (
+              <>
               <div className="table-wrapper">
                 <table className="vehicle-table">
                   <thead style={thStyle}>
@@ -289,7 +309,7 @@ export default function Homepage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {grouped[status].map((v) => (
+                    {paginate(status).map((v) => (
                       <tr key={v.id}>
                         <td>{v.id}</td>
                         <td>{v.firstName}</td>
@@ -361,7 +381,7 @@ export default function Homepage() {
                         <td>
                           {v.status === "PENDING" && (
                             <><button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
-                            <button className="action-btn btn-delete" onClick={() => handleDelete(v.id)}>Delete</button></>
+                              <button className="action-btn btn-delete" onClick={() => handleDelete(v.id)}>Delete</button></>
                           )}
                           {v.status === "APPROVED" && !v.bondEndDate && (
                             <>
@@ -388,6 +408,31 @@ export default function Homepage() {
                   </tbody>
                 </table>
               </div>
+            {/* Pagination controls */}
+              <div className="pagination-table-footer">
+              <div className="pagination-controls-right">
+              <button
+                className="pagination-btn"
+                onClick={() => changePage(status, -1)}
+                disabled={currentPageMap[status] === 1}
+              >
+                ← Prev
+              </button>
+
+              <span className="page-number">
+                Page {currentPageMap[status]} of {Math.ceil(grouped[status].length / itemsPerPage)}
+              </span>
+
+              <button
+                className="pagination-btn"
+                onClick={() => changePage(status, 1)}
+               disabled={currentPageMap[status] >= Math.ceil(grouped[status].length / itemsPerPage)}
+              >
+                Next →
+              </button>
+            </div>
+              </div>
+            </>
             )}
           </section>
         ))}
