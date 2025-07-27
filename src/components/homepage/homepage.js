@@ -59,6 +59,7 @@ export default function Homepage() {
     licenseFile: null,
     passportFile: null,
     photoIdFile: null,
+    vehicleType: ""
   });
 
   useEffect(() => {
@@ -126,9 +127,11 @@ export default function Homepage() {
 
     const newErrors = {};
 
-    if (!registrationNumber?.trim()) {
+    const normalizedType = formInputs.vehicleType?.toLowerCase().replace(/[-\s]/g, "");
+    if (normalizedType !== "ebike" && !registrationNumber?.trim()) {
       newErrors.registrationNumber = "Registration Number is required.";
     }
+
 
     // const start = bondStartDate ? new Date(bondStartDate) : null;
     // const end = bondEndDate ? new Date(bondEndDate) : null;
@@ -281,158 +284,158 @@ export default function Homepage() {
               <p>No {status.toLowerCase()} requests.</p>
             ) : (
               <>
-              <div className="table-wrapper">
-                <table className="vehicle-table">
-                  <thead style={thStyle}>
-                    <tr>
-                      <th>ID</th>
-                      <th>First Name</th>
-                      <th>Last Name</th>
-                      <th>DOB</th>
-                      <th>Mobile</th>
-                      <th>Email</th>
-                      <th>Vehicle Type</th>
-                      {status !== "Pending" && <th>Registration No</th>}
-                      <th>License No</th>
-                      {status !== "Pending" && <th>Start Date</th>}
-                      {status === "Approved" && <th>End Date</th>}
-                      {status === "Closed" && <th>End Date</th>}
-                      {status === "Pending" && (
-                        <>
-                          <th colSpan="2">ID Documents</th>
-                          <th>Bank Statement</th>
-                        </>
-                      )}
-
-                      {/* <th>Signature</th> */}
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginate(status).map((v) => (
-                      <tr key={v.id}>
-                        <td>{v.id}</td>
-                        <td>{v.firstName}</td>
-                        <td>{v.lastName}</td>
-                        <td>{v.dateOfBirth}</td>
-                        <td>{v.mobileNumber}</td>
-                        <td>{v.email}</td>
-                        <td>{v.vehicleType}</td>
-                        {status !== "Pending" && (
-                          <td>
-                            {v.vehicles?.[0]?.registrationNumber || "N/A"}
-                          </td>
-                        )}
-                        <td>{v.licenseNumber}</td>
-                        {status !== "Pending" && (
-                          <td>
-                            {v.vehicles?.[0]?.bondStartDate
-                              ? safeFormat(v.vehicles[0].bondStartDate)
-                              : "N/A"}
-                          </td>
-                        )}
-
-                        {status === "Approved" && (
-                          <td>
-                            {v.vehicles?.[0]?.bondEndDate
-                              ? safeFormat(v.vehicles[0].bondEndDate)
-                              : "Current User"}
-                          </td>
-                        )}
-
-                        {status === "Closed" && (
-                          <td>
-                            {v.vehicles?.[0]?.bondEndDate
-                              ? safeFormat(v.vehicles[0].bondEndDate)
-                              : "N/A"}
-                          </td>
-                        )}
-
+                <div className="table-wrapper">
+                  <table className="vehicle-table">
+                    <thead style={thStyle}>
+                      <tr>
+                        <th>ID</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>DOB</th>
+                        <th>Mobile</th>
+                        <th>Email</th>
+                        <th>Vehicle Type</th>
+                        {status !== "Pending" && <th>Registration No</th>}
+                        <th>License No</th>
+                        {status !== "Pending" && <th>Start Date</th>}
+                        {status === "Approved" && <th>End Date</th>}
+                        {status === "Closed" && <th>End Date</th>}
                         {status === "Pending" && (
                           <>
-                            {["car", "motorbike"].includes(v.vehicleType?.toLowerCase()) ? (
-                              <>
-                                <td>
-                                  <a href={`${config.BASE_URL}/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
-                                </td>
-                                <td>
-                                  <a href={`${config.BASE_URL}/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
-                                </td>
-                              </>
-                            ) : (
-                              <td colSpan="2">
-                                <a href={`${config.BASE_URL}/register/file/${v.id}/photoid`} target="_blank" rel="noopener noreferrer">Photo ID</a>
-                              </td>
-                            )}
-
-                            <td>
-                              <a href={`${config.BASE_URL}/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer">Bank Statement</a>
-                            </td>
+                            <th colSpan="2">ID Documents</th>
+                            <th>Bank Statement</th>
                           </>
                         )}
 
-                        {/* <td>
+                        {/* <th>Signature</th> */}
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginate(status).map((v) => (
+                        <tr key={v.id}>
+                          <td>{v.id}</td>
+                          <td>{v.firstName}</td>
+                          <td>{v.lastName}</td>
+                          <td>{v.dateOfBirth}</td>
+                          <td>{v.mobileNumber}</td>
+                          <td>{v.email}</td>
+                          <td>{v.vehicleType}</td>
+                          {status !== "Pending" && (
+                            <td>
+                              {v.vehicles?.[0]?.registrationNumber || "N/A"}
+                            </td>
+                          )}
+                          <td>{v.licenseNumber}</td>
+                          {status !== "Pending" && (
+                            <td>
+                              {v.vehicles?.[0]?.bondStartDate
+                                ? safeFormat(v.vehicles[0].bondStartDate)
+                                : "N/A"}
+                            </td>
+                          )}
+
+                          {status === "Approved" && (
+                            <td>
+                              {v.vehicles?.[0]?.bondEndDate
+                                ? safeFormat(v.vehicles[0].bondEndDate)
+                                : "Current User"}
+                            </td>
+                          )}
+
+                          {status === "Closed" && (
+                            <td>
+                              {v.vehicles?.[0]?.bondEndDate
+                                ? safeFormat(v.vehicles[0].bondEndDate)
+                                : "N/A"}
+                            </td>
+                          )}
+
+                          {status === "Pending" && (
+                            <>
+                              {["car", "motorbike"].includes(v.vehicleType?.toLowerCase()) ? (
+                                <>
+                                  <td>
+                                    <a href={`${config.BASE_URL}/register/file/${v.id}/license`} target="_blank" rel="noopener noreferrer">License</a>
+                                  </td>
+                                  <td>
+                                    <a href={`${config.BASE_URL}/register/file/${v.id}/passport`} target="_blank" rel="noopener noreferrer">Passport</a>
+                                  </td>
+                                </>
+                              ) : (
+                                <td colSpan="2">
+                                  <a href={`${config.BASE_URL}/register/file/${v.id}/photoid`} target="_blank" rel="noopener noreferrer">Photo ID</a>
+                                </td>
+                              )}
+
+                              <td>
+                                <a href={`${config.BASE_URL}/register/file/${v.id}/bankpdf`} target="_blank" rel="noopener noreferrer">Bank Statement</a>
+                              </td>
+                            </>
+                          )}
+
+                          {/* <td>
                           <img
                             src={`${config.BASE_URL}/register/file/${v.id}/signature`}
                             alt="Signature"
                             style={{ width: "100px", height: "auto" }}
                           />
                         </td> */}
-                        <td>
-                          {v.status === "PENDING" && (
-                            <><button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
-                              <button className="action-btn btn-delete" onClick={() => handleDelete(v.id)}>Delete</button></>
-                          )}
-                          {v.status === "APPROVED" && !v.bondEndDate && (
-                            <>
-                              <button
-                                className="action-btn-group action-btn btn-user"
-                                onClick={() => navigate(`/updateUserInfo/${v.id}`)}
-                              >
-                                User Info
-                              </button>
+                          <td>
+                            {v.status === "PENDING" && (
+                              <><button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
+                                <button className="action-btn btn-delete" onClick={() => handleDelete(v.id)}>Delete</button></>
+                            )}
+                            {v.status === "APPROVED" && !v.bondEndDate && (
+                              <>
+                                <button
+                                  className="action-btn-group action-btn btn-user"
+                                  onClick={() => navigate(`/updateUserInfo/${v.id}`)}
+                                >
+                                  User Info
+                                </button>
 
-                              <button
-                                className="action-btn-group action-btn btn-vehicle"
-                                onClick={() => navigate(`/updatevehicleInfo/${v.id}`)}
-                              >
-                                Vehicle Info
-                              </button>
-                              <button className="action-btn-group action-btn btn-transfer" onClick={handleTransfer}>Transfer</button>
-                            </>
-                          )}
-                          {v.status === "CLOSED" && <span>Closed</span>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            {/* Pagination controls */}
-              <div className="pagination-table-footer">
-              <div className="pagination-controls-right">
-              <button
-                className="pagination-btn"
-                onClick={() => changePage(status, -1)}
-                disabled={currentPageMap[status] === 1}
-              >
-                ← Prev
-              </button>
+                                <button
+                                  className="action-btn-group action-btn btn-vehicle"
+                                  onClick={() => navigate(`/updatevehicleInfo/${v.id}`)}
+                                >
+                                  Vehicle Info
+                                </button>
+                                <button className="action-btn-group action-btn btn-transfer" onClick={handleTransfer}>Transfer</button>
+                              </>
+                            )}
+                            {v.status === "CLOSED" && <span>Closed</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination controls */}
+                <div className="pagination-table-footer">
+                  <div className="pagination-controls-right">
+                    <button
+                      className="pagination-btn"
+                      onClick={() => changePage(status, -1)}
+                      disabled={currentPageMap[status] === 1}
+                    >
+                      ← Prev
+                    </button>
 
-              <span className="page-number">
-                Page {currentPageMap[status]} of {Math.ceil(grouped[status].length / itemsPerPage)}
-              </span>
+                    <span className="page-number">
+                      Page {currentPageMap[status]} of {Math.ceil(grouped[status].length / itemsPerPage)}
+                    </span>
 
-              <button
-                className="pagination-btn"
-                onClick={() => changePage(status, 1)}
-               disabled={currentPageMap[status] >= Math.ceil(grouped[status].length / itemsPerPage)}
-              >
-                Next →
-              </button>
-            </div>
-              </div>
-            </>
+                    <button
+                      className="pagination-btn"
+                      onClick={() => changePage(status, 1)}
+                      disabled={currentPageMap[status] >= Math.ceil(grouped[status].length / itemsPerPage)}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </section>
         ))}
@@ -457,7 +460,8 @@ export default function Homepage() {
                 vehicleModel: "",
                 vehicleYear: "",
                 fuelType: "",
-                note: ""
+                note: "",
+                vehicleType: ""
               });
             }}
           />
@@ -570,7 +574,16 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
         <div className="row">
 
           <div className="input-group" style={{ position: 'relative' }}>
-            <label>Registration Number <span style={{ color: 'red' }}>*</span></label>
+            <label>
+              Registration Number{" "}
+              {formInputs.vehicleType?.toLowerCase().replace(/[-\s]/g, "") !== "ebike" ? (
+                <span style={{ color: "red" }}>*</span>
+              ) : (
+                <span style={{ fontSize: "0.8rem", color: "#777", marginLeft: "6px" }}>
+                  (Optional for e-bikes)
+                </span>
+              )}
+            </label>
             <input
               type="text"
               value={formInputs.registrationNumber || ""}
@@ -613,7 +626,7 @@ function ApproveModal({ formInputs, setFormInputs, errors, setErrors, onSubmit, 
                 ))}
               </ul>
             )}
-            {errors?.registrationNumber && (
+            {formInputs.vehicleType?.toLowerCase().replace(/[-\s]/g, "") !== "ebike" && errors?.registrationNumber && (
               <span style={{ color: "red", fontSize: "0.8rem" }}>{errors.registrationNumber}</span>
             )}
           </div>
