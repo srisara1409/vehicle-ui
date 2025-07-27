@@ -25,7 +25,6 @@ export default function UpdateVehicleInfo() {
     fetch(`${config.BASE_URL}/userVehicle/inactiveVehicles/${id}`)
       .then(res => res.json())
       .then(data => {
-        console.log("Fetched inactive vehicles:", data);
         setInactiveVehicles(Array.isArray(data) ? data : []);
       });
   };
@@ -39,18 +38,22 @@ export default function UpdateVehicleInfo() {
     });
   };
 
-  const countActiveVehicles = () => {
-    return vehicles.filter(v => v.vehicleStatus === 'Active').length;
-  };
+  // const countActiveVehicles = () => {
+  //   return vehicles.filter(v => v.vehicleStatus === 'Active').length;
+  // };
 
   const handleVehicleSubmit = async (userId, updatedVehicle) => {
-    const activeCount = countActiveVehicles();
-    if (updatedVehicle.vehicleStatus === 'Active' && activeCount > 2) {
-      alert('Only 2 vehicles can be Active at a time. Please mark one existing vehicle as Inactive before adding a new Active vehicle.');
-      fetchVehicles();
-      fetchInactiveVehicles();
-      return;
-    }
+   // const activeCount = countActiveVehicles();
+    // if (updatedVehicle.vehicleStatus === 'Active' && activeCount > 2) {
+    //   alert('Only 2 vehicles can be Active at a time.');
+    //   return;
+    // }
+
+//     const payload = {
+//   ...updatedVehicle,
+//   userVehicleId: updatedVehicle.userVehicleId,
+//   vehicleType: updatedVehicle.vehicleType, // must be passed
+// };
 
     try {
       const res = await fetch(`${config.BASE_URL}/userVehicle/updateVehicleInfoToUser/${userId}`, {
@@ -64,8 +67,12 @@ export default function UpdateVehicleInfo() {
         alert(`Vehicle ID updated successfully`);
         fetchInactiveVehicles();
         fetchVehicles();
+      } else if(res.status === 409) {
+        alert(`Warning ! ${text}`);
+        fetchInactiveVehicles();
+        fetchVehicles();
       } else {
-        alert(`Error: ${text}`);
+         alert(`Error: ${text}`);
       }
     } catch (err) {
       alert(`Something went wrong: ${err.message}`);
@@ -125,7 +132,7 @@ export default function UpdateVehicleInfo() {
           </div>
           <div className="vehicle-row">
             {renderInput('bondAmount', 'Bond Amount', vehicle.bondAmount, e => handleVehicleChange(index, e))}
-            {renderInput('bondWeeks', 'Bond Weeks', vehicle.bondWeeks, e => handleVehicleChange(index, e))}
+            {renderInput('bondWeeks', 'Rent per Week', vehicle.bondWeeks, e => handleVehicleChange(index, e))}
           </div>
           <div className="vehicle-row">
             {renderInput('bondStartDate', 'Start Date', vehicle.bondStartDate, e => handleVehicleChange(index, e))}
