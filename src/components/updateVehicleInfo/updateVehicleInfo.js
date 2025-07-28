@@ -49,11 +49,6 @@ export default function UpdateVehicleInfo() {
     //   return;
     // }
 
-//     const payload = {
-//   ...updatedVehicle,
-//   userVehicleId: updatedVehicle.userVehicleId,
-//   vehicleType: updatedVehicle.vehicleType, // must be passed
-// };
 
     try {
       const res = await fetch(`${config.BASE_URL}/userVehicle/updateVehicleInfoToUser/${userId}`, {
@@ -67,12 +62,12 @@ export default function UpdateVehicleInfo() {
         alert(`Vehicle ID updated successfully`);
         fetchInactiveVehicles();
         fetchVehicles();
-      } else if(res.status === 409) {
+      } else if (res.status === 409) {
         alert(`Warning ! ${text}`);
         fetchInactiveVehicles();
         fetchVehicles();
       } else {
-         alert(`Error: ${text}`);
+        alert(`Error: ${text}`);
       }
     } catch (err) {
       alert(`Something went wrong: ${err.message}`);
@@ -85,12 +80,12 @@ export default function UpdateVehicleInfo() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vehicleStatus: newStatus })
-        
+
       });
 
       const text = await res.text();
       if (res.ok) {
-        alert('Status updated successfully');
+        alert(`Vehicle ${userVehicleId} status updated successfully`);
         fetchInactiveVehicles();
         fetchVehicles();
       } else {

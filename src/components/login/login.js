@@ -81,7 +81,7 @@ const Login = () => {
           />
 
           <div className="forgot-password">
-            <a href="#" onClick={(e) => e.preventDefault()}>FORGOT YOUR PASSWORD ?</a>
+            <a href="#" onClick={() => navigate(`/updatePassword`)}>FORGOT YOUR PASSWORD ?</a>
           </div>
         </form>
 
