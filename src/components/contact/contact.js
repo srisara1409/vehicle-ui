@@ -32,7 +32,7 @@
           <div className="contact-left">
             <div className="contact-details">
               <p><FaEnvelope className="icon" /><strong>Email:</strong>&nbsp;support@zubercarleasing.com</p>
-              <p><FaPhone className="icon" /><strong>Phone:</strong>&nbsp;+61 413 376 559 / +61 469 048 855</p>
+              <p><FaPhone className="icon" /><strong>Phone:</strong>&nbsp;+61 439 233 004</p>
               <p><FaMapMarkerAlt className="icon" /><strong>Address:</strong>&nbsp;247 Rawson St, Auburn, NSW, 2144</p>
             </div>
 
