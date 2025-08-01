@@ -109,8 +109,6 @@ const Register = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
@@ -177,7 +175,7 @@ const Register = () => {
       return;
     }
 
-    // ✅ Text/numeric field validation
+    // ✅ Text/numeric field validation changes
     if (
       (["postalCode", "bsbNumber", "accountNumber"].includes(name) && !/^\d*$/.test(value)) ||
       (["licenseState", "city", "state", "country", "bankName", "accountName"].includes(name) && !/^[a-zA-Z\s]*$/.test(value))
