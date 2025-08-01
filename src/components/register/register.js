@@ -107,6 +107,8 @@ const Register = () => {
   const [previews, setPreviews] = useState({ licensePhoto: null, passportCopy: null });
   const [submitted, setSubmitted] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
 
   const handleChange = (e) => {
@@ -279,12 +281,17 @@ const Register = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitted(true);
+    // prevent duplicate submits
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitted(true);
 
     if (!validate()) {
       const firstErrorField = document.querySelector('.input-error');
       if (firstErrorField) {
         firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+      setIsSubmitting(false);    // ← reset if validation fails
       return;
     }
 
@@ -419,6 +426,8 @@ const Register = () => {
         console.error("Error", error.message);
         console.error("Safari/iOS error details:", error);
       }
+    } finally {
+      setIsSubmitting(false);    // ← always re-enable when done
     }
   };
 
@@ -879,7 +888,14 @@ const Register = () => {
 
         <FormGroup>
           <center className="button-row">
-            <Button className="register-btn" type="submit">Register</Button>{' '}
+            <Button
+              className="register-btn"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Registering…' : 'Register'}
+            </Button>
+
             <Button className="cancel-btn" tag={Link} to="/about">Cancel</Button>
           </center>
         </FormGroup>

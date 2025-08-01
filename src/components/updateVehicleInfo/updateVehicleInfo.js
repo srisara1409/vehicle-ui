@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import DatePicker from "react-datepicker";
+import { parse, isValid, format } from "date-fns";
+import "react-datepicker/dist/react-datepicker.css";
 import './updateVehicleInfo.css';
 import config from '../../config';
 
 export default function UpdateVehicleInfo() {
-  const { id } = useParams(); // this is userId
+  const { id } = useParams(); // userId
   const navigate = useNavigate();
 
   const [vehicles, setVehicles] = useState([]);
@@ -18,7 +21,16 @@ export default function UpdateVehicleInfo() {
   const fetchVehicles = () => {
     fetch(`${config.BASE_URL}/userVehicle/getUser/${id}`)
       .then(res => res.json())
-      .then(data => setVehicles(data.vehicles || []));
+      .then(data => {
+        const vehiclesWithParsedDates = (data.vehicles || []).map(v => ({
+          ...v,
+          bondStartDateObj: parseDateTime(v.bondStartDate).date,
+          bondStartTimeObj: parseDateTime(v.bondStartDate).time,
+          bondEndDateObj: parseDateTime(v.bondEndDate).date,
+          bondEndTimeObj: parseDateTime(v.bondEndDate).time
+        }));
+        setVehicles(vehiclesWithParsedDates);
+      });
   };
 
   const fetchInactiveVehicles = () => {
@@ -27,6 +39,18 @@ export default function UpdateVehicleInfo() {
       .then(data => {
         setInactiveVehicles(Array.isArray(data) ? data : []);
       });
+  };
+
+  // Safe parsing helper
+  const parseDateTime = (dateTimeStr) => {
+    if (!dateTimeStr || typeof dateTimeStr !== "string") {
+      return { date: null, time: null };
+    }
+    const parsed = parse(dateTimeStr, "dd-MM-yyyy hh:mm a", new Date());
+    if (!isValid(parsed)) {
+      return { date: null, time: null };
+    }
+    return { date: parsed, time: parsed };
   };
 
   const handleVehicleChange = (index, event) => {
@@ -38,28 +62,35 @@ export default function UpdateVehicleInfo() {
     });
   };
 
-  // const countActiveVehicles = () => {
-  //   return vehicles.filter(v => v.vehicleStatus === 'Active').length;
-  // };
+  const handleVehicleDateChange = (index, field, value) => {
+    setVehicles(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
 
   const handleVehicleSubmit = async (userId, updatedVehicle) => {
-   // const activeCount = countActiveVehicles();
-    // if (updatedVehicle.vehicleStatus === 'Active' && activeCount > 2) {
-    //   alert('Only 2 vehicles can be Active at a time.');
-    //   return;
-    // }
-
+    const payload = {
+      ...updatedVehicle,
+      bondStartDate: isValid(updatedVehicle.bondStartDateObj) && isValid(updatedVehicle.bondStartTimeObj)
+        ? `${format(updatedVehicle.bondStartDateObj, "dd-MM-yyyy")} ${format(updatedVehicle.bondStartTimeObj, "hh:mm a")}`
+        : "",
+      bondEndDate: isValid(updatedVehicle.bondEndDateObj) && isValid(updatedVehicle.bondEndTimeObj)
+        ? `${format(updatedVehicle.bondEndDateObj, "dd-MM-yyyy")} ${format(updatedVehicle.bondEndTimeObj, "hh:mm a")}`
+        : ""
+    };
 
     try {
       const res = await fetch(`${config.BASE_URL}/userVehicle/updateVehicleInfoToUser/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedVehicle)
+        body: JSON.stringify(payload)
       });
 
       const text = await res.text();
       if (res.ok) {
-        alert(`Vehicle ID updated successfully`);
+        alert(`Vehicle updated successfully`);
         fetchInactiveVehicles();
         fetchVehicles();
       } else if (res.status === 409) {
@@ -80,7 +111,6 @@ export default function UpdateVehicleInfo() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vehicleStatus: newStatus })
-
       });
 
       const text = await res.text();
@@ -110,12 +140,12 @@ export default function UpdateVehicleInfo() {
   );
 
   return (
-    <div className="vehicle-update-container">
+    <div className="vehicle-update-container" autoComplete="off">
       <div className="close-button" onClick={() => navigate('/homepage')}>×</div>
       <h1 className="page-header">Update Vehicle Details</h1>
 
       {vehicles.map((vehicle, index) => (
-        <div key={vehicle.vehicleId} className="vehicle-card">
+        <div key={vehicle.vehicleId} className="vehicle-card" autoComplete="off">
           <div className="vehicle-row">
             {renderInput('vehicleMake', 'Make', vehicle.vehicleMake, e => handleVehicleChange(index, e))}
             {renderInput('vehicleModel', 'Model', vehicle.vehicleModel, e => handleVehicleChange(index, e))}
@@ -129,10 +159,71 @@ export default function UpdateVehicleInfo() {
             {renderInput('bondAmount', 'Bond Amount', vehicle.bondAmount, e => handleVehicleChange(index, e))}
             {renderInput('bondWeeks', 'Rent per Week', vehicle.bondWeeks, e => handleVehicleChange(index, e))}
           </div>
+
+          {/* ✅ Bond Start Date & Time */}
           <div className="vehicle-row">
-            {renderInput('bondStartDate', 'Start Date', vehicle.bondStartDate, e => handleVehicleChange(index, e))}
-            {renderInput('bondEndDate', 'End Date', vehicle.bondEndDate, e => handleVehicleChange(index, e))}
+            <div className="input-group">
+              <label>Start Date <span style={{ color: 'red' }}>*</span></label>
+              <DatePicker
+                selected={isValid(vehicle.bondStartDateObj) ? vehicle.bondStartDateObj : null}
+                onChange={(date) => handleVehicleDateChange(index, "bondStartDateObj", date)}
+                dateFormat="dd-MM-yyyy"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                placeholderText="Select date"
+                className="datepicker-input"
+              />
+            </div>
+            <div className="input-group">
+              <label>Start Time <span style={{ color: 'red' }}>*</span></label>
+              <DatePicker
+                selected={isValid(vehicle.bondStartTimeObj) ? vehicle.bondStartTimeObj : null}
+                onChange={(time) => handleVehicleDateChange(index, "bondStartTimeObj", time)}
+                showTimeSelect
+                showTimeSelectOnly
+                timeIntervals={5}
+                timeCaption="Time"
+                dateFormat="hh:mm a"
+                placeholderText="Select time"
+                className="datepicker-input"
+              />
+            </div>
           </div>
+
+          {/* ✅ Bond End Date & Time */}
+          <div className="vehicle-row">
+            <div className="input-group">
+              <label>End Date</label>
+              <DatePicker
+                selected={isValid(vehicle.bondEndDateObj) ? vehicle.bondEndDateObj : null}
+                onChange={(date) => handleVehicleDateChange(index, "bondEndDateObj", date)}
+                dateFormat="dd-MM-yyyy"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                minDate={vehicle.bondStartDateObj}
+                placeholderText="Select date"
+                className="datepicker-input"
+              />
+            </div>
+            <div className="input-group">
+              <label>End Time</label>
+              <DatePicker
+                selected={isValid(vehicle.bondEndTimeObj) ? vehicle.bondEndTimeObj : null}
+                onChange={(time) => handleVehicleDateChange(index, "bondEndTimeObj", time)}
+                showTimeSelect
+                showTimeSelectOnly
+                timeIntervals={5}
+                timeCaption="Time"
+                dateFormat="hh:mm a"
+                placeholderText="Select time"
+                className="datepicker-input"
+              />
+            </div>
+          </div>
+
+          {/* ✅ Status Toggle */}
           <div className="vehicle-row">
             <div className="input-block">
               <label>Status</label>
@@ -157,6 +248,7 @@ export default function UpdateVehicleInfo() {
             </div>
           </div>
 
+          {/* ✅ Notes */}
           <div className="vehicle-row full-width">
             <label>Note</label>
             <textarea
@@ -173,9 +265,9 @@ export default function UpdateVehicleInfo() {
         </div>
       ))}
 
+      {/* Inactive Vehicles Table */}
       <h2 style={{ marginTop: '40px' }}>Inactive Vehicles</h2>
-
-      <table className="inactive-vehicle-table">
+      <table className="inactive-vehicle-table" autoComplete="off">
         <thead>
           <tr>
             <th>REGISTRATION NO</th>
@@ -211,12 +303,10 @@ export default function UpdateVehicleInfo() {
                   </button>
                 </td>
               </tr>
-
             ))
           ) : (
             <tr><td colSpan="6">No inactive vehicles found.</td></tr>
           )}
-
         </tbody>
       </table>
 
