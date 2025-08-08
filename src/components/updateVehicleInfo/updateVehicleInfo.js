@@ -145,7 +145,7 @@ export default function UpdateVehicleInfo() {
       <h1 className="page-header">Update Vehicle Details</h1>
 
       {vehicles.map((vehicle, index) => (
-        <div key={vehicle.vehicleId} className="vehicle-card" autoComplete="off">
+        <div key={vehicle.userVehicleId || index} className="vehicle-card" autoComplete="off">
           <div className="vehicle-row">
             {renderInput('vehicleMake', 'Make', vehicle.vehicleMake, e => handleVehicleChange(index, e))}
             {renderInput('vehicleModel', 'Model', vehicle.vehicleModel, e => handleVehicleChange(index, e))}
