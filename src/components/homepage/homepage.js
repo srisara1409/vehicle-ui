@@ -69,6 +69,17 @@ export default function Homepage() {
       .catch((err) => console.error("Error fetching data:", err));
   }, []);
 
+    // 🔹 Auto-adjust current page when search results change
+    useEffect(() => {
+      ["Pending", "Approved", "Closed"].forEach(status => {
+        const total = grouped[status]?.length || 0;
+        const maxPage = Math.ceil(total / itemsPerPage) || 1;
+        if (currentPageMap[status] > maxPage) {
+          setCurrentPageMap(prev => ({ ...prev, [status]: maxPage }));
+        }
+      });
+    }, [searchText, vehicles]); // runs whenever search text or data changes
+
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
 
@@ -227,6 +238,7 @@ export default function Homepage() {
       .then((data) => setVehicles(data));
   };
 
+  // 🔹 Search is applied to ALL records before pagination
   const filteredVehicles = vehicles.filter((v) => {
     const term = searchText.toLowerCase();
     const regNo = v.registrationNumber || v.vehicles?.[0]?.registrationNumber || "";
@@ -245,6 +257,8 @@ export default function Homepage() {
     Approved: filteredVehicles.filter((v) => v.status === "APPROVED"),
     Closed: filteredVehicles.filter((v) => v.status === "CLOSED")
   };
+
+  // 🔹 Paginate AFTER filtering
   const paginate = (status) => {
     const page = currentPageMap[status];
     const startIndex = (page - 1) * itemsPerPage;
@@ -271,7 +285,16 @@ export default function Homepage() {
             placeholder="Search by"
             className="search-input"
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            // onChange={(e) => setSearchText(e.target.value)}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+              // Optional: reset to first page for all statuses
+              setCurrentPageMap({
+                Pending: 1,
+                Approved: 1,
+                Closed: 1
+              });
+            }}
           />
           <button className="filter-btn" onClick={() => setSearchText("")}>
             Clear
