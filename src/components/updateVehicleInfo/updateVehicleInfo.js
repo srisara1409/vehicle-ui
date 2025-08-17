@@ -20,19 +20,38 @@ export default function UpdateVehicleInfo() {
 
   const fetchVehicles = () => {
     fetch(`${config.BASE_URL}/userVehicle/getUser/${id}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
-        const vehiclesWithParsedDates = (data.vehicles || []).map(v => ({
-          ...v,
-          bondStartDateObj: parseDateTime(v.bondStartDate).date,
-          bondStartTimeObj: parseDateTime(v.bondStartDate).time,
-          bondEndDateObj: parseDateTime(v.bondEndDate).date,
-          bondEndTimeObj: parseDateTime(v.bondEndDate).time
-        }));
+        // Accept both shapes: Array or { vehicles: [...] }
+        const rawVehicles = Array.isArray(data) ? data : (data?.vehicles ?? []);
+
+        const vehiclesWithParsedDates = rawVehicles.map(v => {
+          const { date: startDate, time: startTime } = parseDateTime(v.bondStartDate);
+
+          // bondEndDate can be null
+          const endParsed = v.bondEndDate
+            ? parseDateTime(v.bondEndDate)
+            : { date: null, time: null };
+
+          return {
+            ...v,
+            bondStartDateObj: startDate,
+            bondStartTimeObj: startTime,
+            bondEndDateObj: endParsed.date,
+            bondEndTimeObj: endParsed.time,
+          };
+        });
+
         setVehicles(vehiclesWithParsedDates);
+      })
+      .catch(err => {
+        console.error("Failed to fetch vehicles:", err);
+        setVehicles([]); // or keep previous state, your call
       });
   };
-
   const fetchInactiveVehicles = () => {
     fetch(`${config.BASE_URL}/userVehicle/inactiveVehicles/${id}`)
       .then(res => res.json())
