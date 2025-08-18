@@ -45,6 +45,31 @@ export default function Homepage() {
     }
   };
 
+  // Return true if a date-like string is empty/null
+  const isBlank = (s) => s == null || (typeof s === "string" && s.trim() === "");
+
+  // Choose the "active-first" vehicle for a user:
+  // - Active = no bondEndDate (null/empty/"")
+  // - If multiple actives, pick the most recently updated
+  // - Else pick the most recently updated vehicle overall
+  const pickDisplayVehicle = (user) => {
+    const list = user?.vehicles || [];
+    if (!Array.isArray(list) || list.length === 0) return null;
+
+    const toTime = (s) => {
+      // updatedAt from backend is ISO, safe for Date
+      const t = s ? new Date(s).getTime() : 0;
+      return Number.isFinite(t) ? t : 0;
+    };
+
+    const actives = list.filter(v => isBlank(v.bondEndDate));
+    if (actives.length > 0) {
+      return actives.sort((a, b) => toTime(b.updatedAt) - toTime(a.updatedAt))[0];
+    }
+    return [...list].sort((a, b) => toTime(b.updatedAt) - toTime(a.updatedAt))[0];
+  };
+
+
   const [formInputs, setFormInputs] = useState({
     bondAmount: "",
     bondWeeks: "",
@@ -69,16 +94,16 @@ export default function Homepage() {
       .catch((err) => console.error("Error fetching data:", err));
   }, []);
 
-    // 🔹 Auto-adjust current page when search results change
-    useEffect(() => {
-      ["Pending", "Approved", "Closed"].forEach(status => {
-        const total = grouped[status]?.length || 0;
-        const maxPage = Math.ceil(total / itemsPerPage) || 1;
-        if (currentPageMap[status] > maxPage) {
-          setCurrentPageMap(prev => ({ ...prev, [status]: maxPage }));
-        }
-      });
-    }, [searchText, vehicles]); // runs whenever search text or data changes
+  // 🔹 Auto-adjust current page when search results change
+  useEffect(() => {
+    ["Pending", "Approved", "Closed"].forEach(status => {
+      const total = grouped[status]?.length || 0;
+      const maxPage = Math.ceil(total / itemsPerPage) || 1;
+      if (currentPageMap[status] > maxPage) {
+        setCurrentPageMap(prev => ({ ...prev, [status]: maxPage }));
+      }
+    });
+  }, [searchText, vehicles]); // runs whenever search text or data changes
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
@@ -102,21 +127,39 @@ export default function Homepage() {
     }
   };
 
-  const handleApprove = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    setFormInputs({
-      ...formInputs,
-      userId: vehicle.id,
-      vehicleType: vehicle.vehicleType || "",
-      registrationNumber: vehicle.registrationNumber || vehicle.vehicles?.[0]?.registrationNumber || "",
-      vehicleMake: vehicle.vehicleMake || "",
-      vehicleModel: vehicle.vehicleModel || "",
-      vehicleYear: vehicle.vehicleYear || "",
-      fuelType: vehicle.fuelType || "",
-      note: vehicle.note || ""
-    });
+  // const handleApprove = (vehicle) => {
+  //   setSelectedVehicle(vehicle);
+  //   setFormInputs({
+  //     ...formInputs,
+  //     userId: vehicle.id,
+  //     vehicleType: vehicle.vehicleType || "",
+  //     registrationNumber: vehicle.registrationNumber || vehicle.vehicles?.[0]?.registrationNumber || "",
+  //     vehicleMake: vehicle.vehicleMake || "",
+  //     vehicleModel: vehicle.vehicleModel || "",
+  //     vehicleYear: vehicle.vehicleYear || "",
+  //     fuelType: vehicle.fuelType || "",
+  //     note: vehicle.note || ""
+  //   });
+  //   setShowModal(true);
+  // };
+
+  const handleApprove = (user) => {
+    const dv = pickDisplayVehicle(user) || {};
+    setSelectedVehicle(user);
+    setFormInputs((prev) => ({
+      ...prev,
+      userId: user.id,
+      vehicleType: user.vehicleType || "",
+      registrationNumber: dv.registrationNumber || "",
+      vehicleMake: dv.vehicleMake || "",
+      vehicleModel: dv.vehicleModel || "",
+      vehicleYear: dv.vehicleYear || "",
+      fuelType: dv.fuelType || "",
+      note: user.note || ""
+    }));
     setShowModal(true);
   };
+
 
   const handleModalSubmit = async () => {
     const {
@@ -224,9 +267,9 @@ export default function Homepage() {
     }
   };
 
-  const handleUpdate = (vehicle) => {
-    navigate(`/update/${vehicle.id}`, { state: vehicle });
-  };
+  // const handleUpdate = (vehicle) => {
+  //   navigate(`/update/${vehicle.id}`, { state: vehicle });
+  // };
 
   const handleTransfer = () => {
     window.open("https://www.apps09.revenue.nsw.gov.au/customer_service/finesonline/login", "_blank");
@@ -239,17 +282,36 @@ export default function Homepage() {
   };
 
   // 🔹 Search is applied to ALL records before pagination
-  const filteredVehicles = vehicles.filter((v) => {
+  // const filteredVehicles = vehicles.filter((v) => {
+  //   const term = searchText.toLowerCase();
+  //   const regNo = v.registrationNumber || v.vehicles?.[0]?.registrationNumber || "";
+  //   return (
+  //     (v.firstName || "").toLowerCase().includes(term) ||
+  //     (v.lastName || "").toLowerCase().includes(term) ||
+  //     (v.licenseNumber || "").toLowerCase().includes(term) ||
+  //     (v.email || "").toLowerCase().includes(term) ||
+  //     (v.mobileNumber || "").toLowerCase().includes(term) ||
+  //     regNo.toLowerCase().includes(term)
+  //   );
+  // });
+
+  const filteredVehicles = vehicles.filter((u) => {
     const term = searchText.toLowerCase();
-    const regNo = v.registrationNumber || v.vehicles?.[0]?.registrationNumber || "";
-    return (
-      (v.firstName || "").toLowerCase().includes(term) ||
-      (v.lastName || "").toLowerCase().includes(term) ||
-      (v.licenseNumber || "").toLowerCase().includes(term) ||
-      (v.email || "").toLowerCase().includes(term) ||
-      (v.mobileNumber || "").toLowerCase().includes(term) ||
-      regNo.toLowerCase().includes(term)
+
+    // match basic user fields
+    const basicMatch =
+      (u.firstName || "").toLowerCase().includes(term) ||
+      (u.lastName || "").toLowerCase().includes(term) ||
+      (u.licenseNumber || "").toLowerCase().includes(term) ||
+      (u.email || "").toLowerCase().includes(term) ||
+      (u.mobileNumber || "").toLowerCase().includes(term);
+
+    // match ANY registration number for this user
+    const anyRegoMatch = (u.vehicles || []).some(
+      (v) => (v.registrationNumber || "").toLowerCase().includes(term)
     );
+
+    return basicMatch || anyRegoMatch;
   });
 
   const grouped = {
@@ -264,7 +326,7 @@ export default function Homepage() {
     const startIndex = (page - 1) * itemsPerPage;
     return grouped[status].slice(startIndex, startIndex + itemsPerPage);
   };
-//test1
+  //test1
   const changePage = (status, direction) => {
     setCurrentPageMap((prev) => {
       const total = grouped[status].length;
@@ -344,35 +406,27 @@ export default function Homepage() {
                           <td>{v.mobileNumber}</td>
                           <td>{v.email}</td>
                           <td>{v.vehicleType}</td>
-                          {status !== "Pending" && (
-                            <td>
-                              {v.vehicles?.[0]?.registrationNumber || "N/A"}
-                            </td>
-                          )}
+                          {status !== "Pending" && (() => {
+                            const dv = pickDisplayVehicle(v);
+                            return <td>{dv?.registrationNumber || "N/A"}</td>;
+                          })()}
                           <td>{v.licenseNumber}</td>
-                          {status !== "Pending" && (
-                            <td>
-                              {v.vehicles?.[0]?.bondStartDate
-                                ? safeFormat(v.vehicles[0].bondStartDate)
-                                : "N/A"}
-                            </td>
-                          )}
+                          {status !== "Pending" && (() => {
+                            const dv = pickDisplayVehicle(v);
+                            return <td>{dv?.bondStartDate ? safeFormat(dv.bondStartDate) : "N/A"}</td>;
+                          })()}
 
-                          {status === "Approved" && (
-                            <td>
-                              {v.vehicles?.[0]?.bondEndDate
-                                ? safeFormat(v.vehicles[0].bondEndDate)
-                                : "Current User"}
-                            </td>
-                          )}
+                          {status === "Approved" && (() => {
+                            const dv = pickDisplayVehicle(v);
+                            const end = dv?.bondEndDate;
+                            return <td>{!isBlank(end) ? safeFormat(end) : "Current User"}</td>;
+                          })()}
 
-                          {status === "Closed" && (
-                            <td>
-                              {v.vehicles?.[0]?.bondEndDate
-                                ? safeFormat(v.vehicles[0].bondEndDate)
-                                : "N/A"}
-                            </td>
-                          )}
+                          {status === "Closed" && (() => {
+                            const dv = pickDisplayVehicle(v);
+                            const end = dv?.bondEndDate;
+                            return <td>{!isBlank(end) ? safeFormat(end) : "N/A"}</td>;
+                          })()}
 
                           {status === "Pending" && (
                             <>
@@ -409,24 +463,27 @@ export default function Homepage() {
                               <><button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
                                 <button className="action-btn btn-delete" onClick={() => handleDelete(v.id)}>Delete</button></>
                             )}
-                            {v.status === "APPROVED" && !v.bondEndDate && (
-                              <>
-                                <button
-                                  className="action-btn-group action-btn btn-user"
-                                  onClick={() => navigate(`/updateUserInfo/${v.id}`)}
-                                >
-                                  User Info
-                                </button>
-
-                                <button
-                                  className="action-btn-group action-btn btn-vehicle"
-                                  onClick={() => navigate(`/updatevehicleInfo/${v.id}`)}
-                                >
-                                  Vehicle Info
-                                </button>
-                                <button className="action-btn-group action-btn btn-transfer" onClick={handleTransfer}>Transfer</button>
-                              </>
-                            )}
+                            {v.status === "APPROVED" && (() => {
+                              const dv = pickDisplayVehicle(v);
+                              const isActive = dv && isBlank(dv.bondEndDate);
+                              return isActive ? (
+                                <>
+                                  <button
+                                    className="action-btn-group action-btn btn-user"
+                                    onClick={() => navigate(`/updateUserInfo/${v.id}`)}
+                                  >
+                                    User Info
+                                  </button>
+                                  <button
+                                    className="action-btn-group action-btn btn-vehicle"
+                                    onClick={() => navigate(`/updatevehicleInfo/${v.id}`)}
+                                  >
+                                    Vehicle Info
+                                  </button>
+                                  <button className="action-btn-group action-btn btn-transfer" onClick={handleTransfer}>Transfer</button>
+                                </>
+                              ) : null;
+                            })()}
                             {v.status === "CLOSED" && <span>Closed</span>}
                           </td>
                         </tr>
