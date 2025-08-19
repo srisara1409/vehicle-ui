@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import { parse, isValid, format } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
@@ -9,6 +9,8 @@ import config from '../../config';
 export default function UpdateVehicleInfo() {
   const { id } = useParams(); // userId
   const navigate = useNavigate();
+  const location = useLocation();
+  const readOnly = new URLSearchParams(location.search).get('mode') === 'view';
 
   const [vehicles, setVehicles] = useState([]);
   const [inactiveVehicles, setInactiveVehicles] = useState([]);
@@ -49,18 +51,20 @@ export default function UpdateVehicleInfo() {
       })
       .catch(err => {
         console.error("Failed to fetch vehicles:", err);
-        setVehicles([]); // or keep previous state, your call
+        setVehicles([]);
       });
   };
+
   const fetchInactiveVehicles = () => {
     fetch(`${config.BASE_URL}/userVehicle/inactiveVehicles/${id}`)
       .then(res => res.json())
       .then(data => {
         setInactiveVehicles(Array.isArray(data) ? data : []);
-      });
+      })
+      .catch(() => setInactiveVehicles([]));
   };
 
-  // Safe parsing helper
+  // Safe parsing helper for "dd-MM-yyyy hh:mm a" strings
   const parseDateTime = (dateTimeStr) => {
     if (!dateTimeStr || typeof dateTimeStr !== "string") {
       return { date: null, time: null };
@@ -71,6 +75,31 @@ export default function UpdateVehicleInfo() {
     }
     return { date: parsed, time: parsed };
   };
+
+  // Normalize an inactive DTO to the same shape as active card expects
+  const normalizeInactiveToCard = (v) => {
+    const { date: sDate, time: sTime } = parseDateTime(v.bondStartDate);
+    const { date: eDate, time: eTime } = v.bondEndDate ? parseDateTime(v.bondEndDate) : { date: null, time: null };
+    return {
+      ...v,
+      bondStartDateObj: sDate,
+      bondStartTimeObj: sTime,
+      bondEndDateObj: eDate,
+      bondEndTimeObj: eTime,
+      // optional fields may be missing from projection; default them
+      // bondAmount: v.bondAmount ?? "",
+      // bondWeeks: v.bondWeeks ?? "",
+      // note: v.note ?? "",
+    };
+  };
+
+  // In read-only mode, render ALL vehicles (active + inactive) as cards
+  const vehiclesToRender = readOnly
+    ? [
+        ...vehicles,
+        ...inactiveVehicles.map(normalizeInactiveToCard)
+      ]
+    : vehicles;
 
   const handleVehicleChange = (index, event) => {
     const { name, value } = event.target;
@@ -154,6 +183,8 @@ export default function UpdateVehicleInfo() {
         value={value || ''}
         onChange={onChange}
         placeholder={placeholder}
+        disabled={readOnly}
+        readOnly={readOnly}
       />
     </div>
   );
@@ -161,9 +192,9 @@ export default function UpdateVehicleInfo() {
   return (
     <div className="vehicle-update-container" autoComplete="off">
       <div className="close-button" onClick={() => navigate('/homepage')}>×</div>
-      <h1 className="page-header">Update Vehicle Details</h1>
+      <h1 className="page-header">{readOnly ? "Vehicle Details" : "Update Vehicle Details"}</h1>
 
-      {vehicles.map((vehicle, index) => (
+      {vehiclesToRender.map((vehicle, index) => (
         <div key={vehicle.userVehicleId || index} className="vehicle-card" autoComplete="off">
           <div className="vehicle-row">
             {renderInput('vehicleMake', 'Make', vehicle.vehicleMake, e => handleVehicleChange(index, e))}
@@ -179,7 +210,7 @@ export default function UpdateVehicleInfo() {
             {renderInput('bondWeeks', 'Rent per Week', vehicle.bondWeeks, e => handleVehicleChange(index, e))}
           </div>
 
-          {/* ✅ Bond Start Date & Time */}
+          {/* Bond Start Date & Time */}
           <div className="vehicle-row">
             <div className="input-group">
               <label>Start Date <span style={{ color: 'red' }}>*</span></label>
@@ -192,6 +223,7 @@ export default function UpdateVehicleInfo() {
                 dropdownMode="select"
                 placeholderText="Select date"
                 className="datepicker-input"
+                disabled={readOnly}
               />
             </div>
             <div className="input-group">
@@ -206,11 +238,12 @@ export default function UpdateVehicleInfo() {
                 dateFormat="hh:mm a"
                 placeholderText="Select time"
                 className="datepicker-input"
+                disabled={readOnly}
               />
             </div>
           </div>
 
-          {/* ✅ Bond End Date & Time */}
+          {/* Bond End Date & Time */}
           <div className="vehicle-row">
             <div className="input-group">
               <label>End Date</label>
@@ -224,6 +257,7 @@ export default function UpdateVehicleInfo() {
                 minDate={vehicle.bondStartDateObj}
                 placeholderText="Select date"
                 className="datepicker-input"
+                disabled={readOnly}
               />
             </div>
             <div className="input-group">
@@ -238,11 +272,12 @@ export default function UpdateVehicleInfo() {
                 dateFormat="hh:mm a"
                 placeholderText="Select time"
                 className="datepicker-input"
+                disabled={readOnly}
               />
             </div>
           </div>
 
-          {/* ✅ Status Toggle */}
+          {/* Status Toggle */}
           <div className="vehicle-row">
             <div className="input-block">
               <label>Status</label>
@@ -259,6 +294,7 @@ export default function UpdateVehicleInfo() {
                         }
                       })
                     }
+                    disabled={readOnly}
                   />
                   <span className="slider"></span>
                 </label>
@@ -267,7 +303,7 @@ export default function UpdateVehicleInfo() {
             </div>
           </div>
 
-          {/* ✅ Notes */}
+          {/* Notes */}
           <div className="vehicle-row full-width">
             <label>Note</label>
             <textarea
@@ -275,59 +311,67 @@ export default function UpdateVehicleInfo() {
               value={vehicle.note || ''}
               onChange={e => handleVehicleChange(index, e)}
               placeholder="Note"
+              disabled={readOnly}
+              readOnly={readOnly}
             />
           </div>
 
-          <div className="vehicle-actions">
-            <button onClick={() => handleVehicleSubmit(id, vehicle)}>Update Vehicle #{index + 1}</button>
-          </div>
+          {!readOnly && (
+            <div className="vehicle-actions">
+              <button onClick={() => handleVehicleSubmit(id, vehicle)}>Update Vehicle #{index + 1}</button>
+            </div>
+          )}
         </div>
       ))}
 
-      {/* Inactive Vehicles Table */}
-      <h2 style={{ marginTop: '40px' }}>Inactive Vehicles</h2>
-      <table className="inactive-vehicle-table" autoComplete="off">
-        <thead>
-          <tr>
-            <th>REGISTRATION NO</th>
-            <th>MODEL</th>
-            <th>MAKE</th>
-            <th>YEAR</th>
-            <th>FUEL TYPE</th>
-            <th>STATUS</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Array.isArray(inactiveVehicles) && inactiveVehicles.length > 0 ? (
-            inactiveVehicles.map(v => (
-              <tr key={v.userVehicleId}>
-                <td>{v.registrationNumber}</td>
-                <td>{v.vehicleModel}</td>
-                <td>{v.vehicleMake}</td>
-                <td>{v.vehicleYear}</td>
-                <td>{v.fuelType}</td>
-                <td>
-                  <select
-                    value={v.vehicleStatus}
-                    onChange={(e) => handleStatusUpdate(v.userVehicleId, e.target.value)}
-                  >
-                    <option value="InActive">InActive</option>
-                    <option value="Active">Active</option>
-                  </select>
-                  <button
-                    onClick={() => handleStatusUpdate(v.userVehicleId, v.vehicleStatus)}
-                    style={{ marginLeft: '8px' }}
-                  >
-                    ✅
-                  </button>
-                </td>
+      {/* In read-only mode, cards above already show inactive vehicles; hide the old table */}
+      {!readOnly && (
+        <>
+          <h2 style={{ marginTop: '40px' }}>Inactive Vehicles</h2>
+          <table className="inactive-vehicle-table" autoComplete="off">
+            <thead>
+              <tr>
+                <th>REGISTRATION NO</th>
+                <th>MODEL</th>
+                <th>MAKE</th>
+                <th>YEAR</th>
+                <th>FUEL TYPE</th>
+                <th>STATUS</th>
               </tr>
-            ))
-          ) : (
-            <tr><td colSpan="6">No inactive vehicles found.</td></tr>
-          )}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {Array.isArray(inactiveVehicles) && inactiveVehicles.length > 0 ? (
+                inactiveVehicles.map(v => (
+                  <tr key={v.userVehicleId}>
+                    <td>{v.registrationNumber}</td>
+                    <td>{v.vehicleModel}</td>
+                    <td>{v.vehicleMake}</td>
+                    <td>{v.vehicleYear}</td>
+                    <td>{v.fuelType}</td>
+                    <td>
+                      <select
+                        value={v.vehicleStatus}
+                        onChange={(e) => handleStatusUpdate(v.userVehicleId, e.target.value)}
+                      >
+                        <option value="InActive">InActive</option>
+                        <option value="Active">Active</option>
+                      </select>
+                      <button
+                        onClick={() => handleStatusUpdate(v.userVehicleId, v.vehicleStatus)}
+                        style={{ marginLeft: '8px' }}
+                      >
+                        ✅
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td colSpan="6">No inactive vehicles found.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </>
+      )}
 
       <div className="back-buttonv">
         <button onClick={() => navigate('/homepage')}>Back to Home</button>
