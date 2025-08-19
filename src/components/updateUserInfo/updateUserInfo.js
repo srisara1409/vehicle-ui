@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import './updateUserInfo.css';
 import config from '../../config';
 
 export default function UpdateUserInfo() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const readOnly = new URLSearchParams(location.search).get('mode') === 'view';
 
   const [userInfo, setUserInfo] = useState({
     id: '', // include this for file URLs
@@ -61,7 +63,8 @@ export default function UpdateUserInfo() {
         value={value || ''}
         onChange={handleUserChange}
         placeholder={placeholder}
-        disabled={disabled}
+        disabled={readOnly || disabled}   // 🔒 lock fields in view mode
+        readOnly={readOnly}
       />
     </div>
   );
@@ -69,7 +72,7 @@ export default function UpdateUserInfo() {
   return (
     <div className="user-update-wrapper">
       <div className="close-button" onClick={() => navigate('/homepage')}>×</div>
-      <h1 className="page-title">Edit User Information</h1>
+      <h1 className="page-title">{readOnly ? "User Information" : "Edit User Information"}</h1>
 
       <section className="form-section">
         <h2>User Info</h2>
@@ -167,7 +170,7 @@ export default function UpdateUserInfo() {
 
 
         <div className="button-row">
-          <button onClick={handleUserSubmit}>Update User</button>
+        {!readOnly && <button onClick={handleUserSubmit}>Update User</button>}
         </div>
       </section>
 

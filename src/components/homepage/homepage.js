@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
-import { parse, format, isValid } from 'date-fns';
+import { parse, format, isValid, parseISO } from 'date-fns';
 import axios from 'axios';
 import "react-datepicker/dist/react-datepicker.css";
 import "./homepage.css";
@@ -44,6 +44,43 @@ export default function Homepage() {
       return "N/A";
     }
   };
+
+  const formatIsoTs = (isoLike) => {
+    try {
+      if (!isoLike) return "N/A";
+      const d = new Date(isoLike);
+      if (Number.isNaN(d.getTime())) return "N/A";
+      return format(d, "dd-MM-yyyy hh:mm aa");
+    } catch {
+      return "N/A";
+    }
+  };
+
+  // Parse an ISO-ish string safely to milliseconds
+  const toMs = (val) => {
+    try {
+      if (!val) return 0;
+      const d = parseISO(String(val));
+      return isValid(d) ? d.getTime() : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  // For APPROVED rows: latest change across user & any of their vehicles
+  const effectiveUpdatedMs = (u) => {
+    const userMs = toMs(u.updatedAt);
+    const vehicleMax = Math.max(
+      0,
+      ...((u.vehicles || []).map(v => toMs(v.updatedAt)))
+    );
+    return Math.max(userMs, vehicleMax);
+  };
+
+  // Sorters
+  const sortPending = (arr) => [...arr].sort((a, b) => toMs(b.createdAt) - toMs(a.createdAt));
+  const sortApproved = (arr) => [...arr].sort((a, b) => effectiveUpdatedMs(b) - effectiveUpdatedMs(a));
+  const sortClosed = (arr) => [...arr].sort((a, b) => toMs(b.updatedAt) - toMs(a.updatedAt));
 
   // Return true if a date-like string is empty/null
   const isBlank = (s) => s == null || (typeof s === "string" && s.trim() === "");
@@ -315,9 +352,9 @@ export default function Homepage() {
   });
 
   const grouped = {
-    Pending: filteredVehicles.filter((v) => v.status === "PENDING"),
-    Approved: filteredVehicles.filter((v) => v.status === "APPROVED"),
-    Closed: filteredVehicles.filter((v) => v.status === "CLOSED")
+    Pending:  sortPending(filteredVehicles.filter(v => v.status === "PENDING")),
+    Approved: sortApproved(filteredVehicles.filter(v => v.status === "APPROVED")),
+    Closed:   sortClosed(filteredVehicles.filter(v => v.status === "CLOSED")),
   };
 
   // 🔹 Paginate AFTER filtering
@@ -458,33 +495,60 @@ export default function Homepage() {
                             style={{ width: "100px", height: "auto" }}
                           />
                         </td> */}
+                          
                           <td>
                             {v.status === "PENDING" && (
-                              <><button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
-                                <button className="action-btn btn-delete" onClick={() => handleDelete(v.id)}>Delete</button></>
+                              <>
+                                <button className="action-btn btn-approve" onClick={() => handleApprove(v)}>Approve</button>
+                                <button className="action-btn btn-delete" onClick={() => handleDelete(v.id)}>Delete</button>
+                              </>
                             )}
-                            {v.status === "APPROVED" && (() => {
-                              const dv = pickDisplayVehicle(v);
-                              const isActive = dv && isBlank(dv.bondEndDate);
-                              return isActive ? (
-                                <>
-                                  <button
-                                    className="action-btn-group action-btn btn-user"
-                                    onClick={() => navigate(`/updateUserInfo/${v.id}`)}
-                                  >
-                                    User Info
-                                  </button>
-                                  <button
-                                    className="action-btn-group action-btn btn-vehicle"
-                                    onClick={() => navigate(`/updatevehicleInfo/${v.id}`)}
-                                  >
-                                    Vehicle Info
-                                  </button>
-                                  <button className="action-btn-group action-btn btn-transfer" onClick={handleTransfer}>Transfer</button>
-                                </>
-                              ) : null;
-                            })()}
-                            {v.status === "CLOSED" && <span>Closed</span>}
+
+                            {v.status === "APPROVED" && (
+                              <>
+                                <button
+                                  className="action-btn-group action-btn btn-user"
+                                  onClick={() => navigate(`/updateUserInfo/${v.id}`)}
+                                >
+                                  User Info
+                                </button>
+                                <button
+                                  className="action-btn-group action-btn btn-vehicle"
+                                  onClick={() => navigate(`/updatevehicleInfo/${v.id}`)}
+                                >
+                                  Vehicle Info
+                                </button>
+                                <button
+                                  className="action-btn-group action-btn btn-transfer"
+                                  onClick={handleTransfer}
+                                >
+                                  Transfer
+                                </button>
+                              </>
+                            )}
+
+                            {v.status === "CLOSED" && (
+                              <>
+                                <button
+                                  className="action-btn-group action-btn btn-user"
+                                  onClick={() => navigate(`/updateUserInfo/${v.id}?mode=view`)}
+                                >
+                                  User Info
+                                </button>
+                                <button
+                                  className="action-btn-group action-btn btn-vehicle"
+                                  onClick={() => navigate(`/updatevehicleInfo/${v.id}?mode=view`)}
+                                >
+                                  Vehicle Info
+                                </button>
+                                <button
+                                  className="action-btn-group action-btn btn-transfer"
+                                  onClick={handleTransfer}
+                                >
+                                  Transfer
+                                </button>
+                              </>
+                            )}
                           </td>
                         </tr>
                       ))}
