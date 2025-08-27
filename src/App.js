@@ -24,7 +24,7 @@ function App() {
 
             <div className="content">
                 <Routes>
-                    <Route path="/" element={<Login />} />
+                    <Route path="/" element={<Register />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/homepage" element={<PrivateRoute><Home /></PrivateRoute>} />
                     <Route path="/update/:id" element={<PrivateRoute><UpdatePage /></PrivateRoute>} />
