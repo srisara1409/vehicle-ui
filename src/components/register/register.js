@@ -932,6 +932,16 @@ const Register = () => {
                   Renters are liable for damage due to misuse, negligence, or unauthorized use.
                   Accidents must be reported within 12 hours with a police report if applicable.
                   Insurance excess is payable unless waived with an excess reduction package.
+
+                    <p>Additional Insurance & Excess Conditions:</p>
+                    <ul style={{ marginLeft: '20px' }}>
+                      <li>Car accident basic excess: AUD $1,200</li>
+                      <li>Motorbike and scooter basic excess: AUD $1,500</li>
+                      <li>Stolen bike excess: AUD $2,000</li>
+                      <li>Additional excess applies for drivers under 25 years of age.</li>
+                      <li>Drivers under 21 years are not covered under insurance.</li>
+                      <li>E-bikes are not covered by any insurance policy. Renters assume full responsibility for loss or damage.</li>
+                    </ul>
                 </ul>
 
                 <h5>5. Prohibited Uses</h5>
